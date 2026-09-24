@@ -1,0 +1,39 @@
+# 换行符统一：源码用 LF，Windows 脚本锁死 CRLF
+# 背景：tools/portable/启动.bat 若是 LF，.bat 里的 goto 标签会失效、便携版起不来
+#       server.ps1 还必须是「UTF-8 + BOM + CRLF」，否则 PowerShell 5.1 按 GBK 解析会语法报错
+* text=auto
+
+.gitattributes text eol=lf
+.gitignore     text eol=lf
+
+*.ts   text eol=lf
+*.tsx  text eol=lf
+*.js   text eol=lf
+*.mjs  text eol=lf
+*.cjs  text eol=lf
+*.json text eol=lf
+*.md   text eol=lf
+*.css  text eol=lf
+*.rs   text eol=lf
+*.toml text eol=lf
+*.yml  text eol=lf
+*.yaml text eol=lf
+
+# Windows 脚本：工作区保留 CRLF，不要自动转换
+*.bat text eol=crlf
+*.cmd text eol=crlf
+*.ps1 text eol=crlf
+
+# 二进制：不要做任何换行或编码处理
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.webp binary
+*.ico  binary
+*.icns binary
+*.exe  binary
+*.dll  binary
+*.zip  binary
+*.ecp  binary
+*.db   binary
