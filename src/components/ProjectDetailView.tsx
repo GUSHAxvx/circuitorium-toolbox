@@ -288,7 +288,7 @@ export default function ProjectDetailView({
       try {
         const data = await loadLocalProjectView(String(projectId));
         if (!data) {
-          setToast('这件作品在本机不存在');
+          setToast('这件作品不在这台电脑上了（可能已经删掉了）');
         } else {
           setProject(data.project);
           setComponents(data.components);
@@ -299,7 +299,7 @@ export default function ProjectDetailView({
           setFeaturesDerived(data.featuresDerived);
         }
       } catch (e) {
-        setToast(e instanceof Error ? e.message : '本机存储不可用');
+        setToast(e instanceof Error ? e.message : '这台电脑的本地存储打不开');
       } finally {
         setLoading(false);
       }
@@ -412,7 +412,7 @@ export default function ProjectDetailView({
       setProject((p) => (p ? { ...p, description: editDesc, features: editFeatures } : p));
       setFeaturesDerived(false);
       setEditingDesc(false);
-      flash('项目描述已保存');
+      flash('项目描述存好了');
       setSaving(false);
       return;
     }
@@ -425,7 +425,7 @@ export default function ProjectDetailView({
       setProject((p) => (p ? { ...p, description: editDesc, features: editFeatures } : p));
       setFeaturesDerived(false);
       setEditingDesc(false);
-      flash('项目描述已保存');
+      flash('项目描述存好了');
     } else {
       const data = await res.json().catch(() => ({}));
       flash(data.error || '保存失败');
@@ -434,7 +434,7 @@ export default function ProjectDetailView({
   };
 
   const handleDeleteProject = async () => {
-    if (!confirm('确定删除这件作品？作品下的元件与图片会一起删除，且无法恢复。')) return;
+    if (!confirm('删掉这件作品？里面的元件和图片会一起走，删了就找不回来了。')) return;
     if (isLocal) {
       await localDeleteProject(String(projectId));
       onBack?.();
@@ -471,7 +471,7 @@ export default function ProjectDetailView({
   };
 
   const handleRemoveComponent = async (componentId: number | string) => {
-    if (!confirm('确定从作品里移除这个元件？')) return;
+    if (!confirm('把这个元件从作品里拿掉？')) return;
     if (isLocal) {
       await localRemoveComponent(String(componentId));
       setComponents((prev) => prev.filter((c) => c.id !== componentId));
@@ -527,7 +527,7 @@ export default function ProjectDetailView({
     if (isLocal) {
       await localUpdateComponent(String(editingComponent), editForm);
       setComponents((prev) => prev.map((c) => (c.id === editingComponent ? { ...c, ...editForm } : c)));
-      flash('元件信息已保存');
+      flash('元件信息存好了');
       setEditingComponent(null);
       setSaving(false);
       return;
@@ -537,7 +537,7 @@ export default function ProjectDetailView({
     });
     if (res.ok) {
       setComponents((prev) => prev.map((c) => (c.id === editingComponent ? { ...c, ...editForm } : c)));
-      flash('元器件信息已保存');
+      flash('元器件信息存好了');
     }
     setEditingComponent(null);
     setSaving(false);
@@ -683,7 +683,7 @@ export default function ProjectDetailView({
   };
 
   const handleDeleteImage = async (imageId: number | string) => {
-    if (!confirm('确定删除这张图片？')) return;
+    if (!confirm('删掉这张图片？')) return;
     if (isLocal) {
       await localRemoveImage(String(imageId));
       setImages((prev) => prev.filter((img) => img.id !== imageId));
@@ -905,7 +905,7 @@ export default function ProjectDetailView({
                 onClick={owner ? () => { setEditNotes(project.notes || ''); setEditingNotes(true); } : undefined}
                 style={{ cursor: owner ? 'pointer' : 'default' }}
               >
-                {project.notes || (owner ? '点击添加项目简介…' : '作者还没有填写项目简介')}
+                {project.notes || (owner ? '点一下，写句简介…' : '作者还没写简介')}
               </p>
             )}
 
@@ -1141,7 +1141,7 @@ export default function ProjectDetailView({
             </dl>
 
             <p className="pj-sub-title">项目简介</p>
-            <p className="pj-info-text">{project.notes || '作者还没有填写项目简介。'}</p>
+            <p className="pj-info-text">{project.notes || '作者还没写简介。'}</p>
 
             {stats && stats.scenarioTags.length > 0 && (
               <>
@@ -1204,7 +1204,7 @@ export default function ProjectDetailView({
                 <p className="pj-text">
                   {project.description
                     || project.notes
-                    || (owner ? '点右上角「编辑」写下项目描述。' : '作者还没有填写项目描述。')}
+                    || (owner ? '点右上角「编辑」，写下这个作品做了什么。' : '作者还没写项目描述。')}
                 </p>
                 {featureList.length > 0 && (
                   <>

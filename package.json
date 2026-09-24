@@ -10,6 +10,9 @@
         "build:portable": "node tools/build-portable.mjs",
         "build:desktop": "node tools/build-desktop.mjs",
         "build:desktop-installer": "node tools/build-desktop.mjs --bundle",
+        "release": "node tools/release.mjs",
+        "release:installer": "node tools/release.mjs --installer",
+        "check": "tsc --noEmit && eslint",
         "tauri": "tauri"
     },
     "dependencies": {

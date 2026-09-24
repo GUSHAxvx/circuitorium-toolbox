@@ -49,7 +49,7 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
   const handleRecognize = async () => {
     if (!config || !file) return;
     setBusy(true);
-    setMsg('正在识别，请稍候…');
+    setMsg('正在认，稍等一下…');
     try {
       const { components: list } = await recognizeImage(config, file);
       const store = getStore();
@@ -67,7 +67,7 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
         });
       }
       setFound(list.map((c) => ({ name: c.name, type: c.type || '', confidence: c.confidence || 0 })));
-      setMsg(`识别完成，已加入 ${list.length} 个元件`);
+      setMsg(`认完了，已加入 ${list.length} 个元件`);
       onAdded?.(list.length);
     } catch (err) {
       setMsg(err instanceof AiError ? err.message : '识别失败，请稍后重试');
@@ -88,13 +88,13 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
         </header>
 
         {config === null ? (
-          <p className="lr-note">正在读取本机设置…</p>
+          <p className="lr-note">正在读这台电脑上的设置…</p>
         ) : !ready ? (
           <section className="lr-card">
-            <h3>这台电脑还没配置识别凭据</h3>
+            <h3>这台电脑还没配识别凭据</h3>
             <p>
-              不配置也完全没关系：上面的「＋ 添加元件」可以手动录入，工具箱其它功能都不受影响。
-              想用 AI 识别，可以填老师发的配置码，或自己的识别凭据。
+              不配也完全没关系：上面的「＋ 添加元件」手动录入一样能把作品做完，工具箱别的功能一点不受影响。
+              想用 AI 识别，就填老师发的配置码，或者自己的识别凭据。
             </p>
             <button className="lr-btn lr-btn-primary" onClick={() => setShowSettings(true)}>去设置识别凭据</button>
           </section>
@@ -102,7 +102,7 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
           <>
             <section className="lr-card">
               <h3>选一张元件照片</h3>
-              <p>照片只在本机用于这一次识别，不会存进作品里。</p>
+              <p>照片只在这一刻用一下，不会存进作品里。</p>
               <div className="lr-row">
                 <label className="lr-btn lr-btn-primary" style={{ cursor: busy ? 'default' : 'pointer' }}>
                   {file ? '换一张' : '选择照片 / 拍照'}

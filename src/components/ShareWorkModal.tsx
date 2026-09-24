@@ -45,10 +45,10 @@ export default function ShareWorkModal({ projectId, onClose }: Props) {
       const { bytes } = await buildEcpBytes(bundle, author);
       const { html, filename, embedded, warnings } = await buildShareHtml({ bundle, author, ecpBytes: bytes });
       const saved = await saveBlob(new Blob([html], { type: 'text/html;charset=utf-8' }), filename);
-      if (!saved.ok) { setMsg('已取消保存'); return; }
+      if (!saved.ok) { setMsg('好，那就不存了'); return; }
       setMsg(embedded
-        ? `已生成 ${filename}（在 ${saved.where}），发给别人双击就能看，页面里点一下就能存到自己的工具箱`
-        : `已生成 ${filename}（在 ${saved.where}）${warnings.length ? `（${warnings[0]}）` : ''}`);
+        ? `发出去吧：${filename}（在 ${saved.where}）。别人双击就能看，页面里点一下就能存进自己的工具箱`
+        : `发出去吧：${filename}（在 ${saved.where}）${warnings.length ? `（${warnings[0]}）` : ''}`);
     } catch (e) {
       setMsg(e instanceof Error ? e.message : '生成失败');
     } finally {
@@ -81,8 +81,8 @@ export default function ShareWorkModal({ projectId, onClose }: Props) {
     try {
       const { blob, filename, warnings } = await exportProjectToEcp(projectId, author);
       const saved = await saveBlob(blob, filename);
-      if (!saved.ok) { setMsg('已取消保存'); return; }
-      setMsg(`已保存 ${filename}（在 ${saved.where}）${warnings.length ? `（${warnings[0]}）` : ''}`);
+      if (!saved.ok) { setMsg('好，那就不存了'); return; }
+      setMsg(`存好了：${filename}（在 ${saved.where}）${warnings.length ? `（${warnings[0]}）` : ''}`);
     } finally {
       setBusy(false);
     }
@@ -101,7 +101,7 @@ export default function ShareWorkModal({ projectId, onClose }: Props) {
         <header className="sw-head">
           <div>
             <h2>分享《{bundle.project.name}》</h2>
-            <p>三种方式随你挑 · 都是本地生成，不经过服务器</p>
+            <p>三种方式随你挑 · 都在本机生成，不经过任何服务器</p>
           </div>
           <button className="sw-close" onClick={onClose} aria-label="关闭">✕</button>
         </header>
@@ -137,7 +137,7 @@ export default function ShareWorkModal({ projectId, onClose }: Props) {
         </div>
 
         {msg && <p className="sw-msg">{msg}</p>}
-        <p className="sw-foot-note">作品里不会带上你的识别设置、凭据等本机信息。</p>
+        <p className="sw-foot-note">作品里不会带上你的识别设置、凭据这些本机信息，放心发。</p>
 
         <style jsx global>{`
           .sw-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(4,7,14,0.78); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 18px; }

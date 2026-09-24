@@ -54,7 +54,7 @@ export default function ToolboxPage() {
       try {
         await refresh();
       } catch (e) {
-        setError(e instanceof Error ? e.message : '本地存储不可用');
+        setError(e instanceof Error ? e.message : '这台电脑的本地存储打不开，换个浏览器试试');
       } finally {
         setLoading(false);
       }
@@ -108,11 +108,11 @@ export default function ToolboxPage() {
       await refresh();
       setOpenId(res.projectId);
       setNotice(
-        `已打开《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个 · 教程 ${res.counts.sections} 节 · 图片 ${res.counts.images} 张`
+        `收下了《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个 · 教程 ${res.counts.sections} 节 · 图片 ${res.counts.images} 张`
         + (res.warnings.length ? `（${res.warnings[0]}）` : '')
       );
     } catch (err) {
-      setError(err instanceof Error ? err.message : '这个文件打不开');
+      setError(err instanceof Error ? err.message : '这个文件打不开，可能没传完整——让对方再发一次吧');
     } finally {
       setBusy(false);
       if (openFileRef.current) openFileRef.current.value = '';
@@ -122,7 +122,7 @@ export default function ToolboxPage() {
   const handleWorkCode = async () => {
     const bytes = decodeWorkCode(workCodeInput);
     if (!bytes) {
-      setError('作品码看不懂，请确认扫码内容以 CTW1- 开头且复制完整');
+      setError('这串作品码没看明白——确认一下是以 CTW1- 开头、而且复制完整了');
       return;
     }
     setBusy(true);
@@ -133,9 +133,9 @@ export default function ToolboxPage() {
       await refresh();
       setOpenId(res.projectId);
       setWorkCodeInput('');
-      setNotice(`已打开《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个`);
+      setNotice(`收下了《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : '这个作品码打不开');
+      setError(err instanceof Error ? err.message : '这串作品码打不开，让发的人重新生成一次吧');
     } finally {
       setBusy(false);
     }
@@ -152,7 +152,7 @@ export default function ToolboxPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`删除「${name}」？该项目的元件、图片与教程会一起删除，且无法恢复。`)) return;
+    if (!confirm(`删掉「${name}」？里面的元件、图片、教程会一起走，删了就找不回来了。`)) return;
     setBusy(true);
     try {
       await getStore().deleteProject(id);
@@ -170,10 +170,10 @@ export default function ToolboxPage() {
     try {
       const { blob, filename, warnings } = await exportProjectToEcp(id);
       const saved = await saveBlob(blob, filename);
-      if (!saved.ok) { setNotice('已取消保存'); return; }
+      if (!saved.ok) { setNotice('好，那就不存了'); return; }
       setNotice(warnings.length
         ? `作品文件已保存（${warnings[0]}）`
-        : `作品文件已保存到 ${saved.where}，发给别人双击就能打开`);
+        : `存好了：${saved.where}。发给别人，双击就能打开`);
     } catch (e) {
       setError(e instanceof Error ? e.message : '保存失败');
     } finally {
@@ -330,8 +330,8 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         </header>
 
         <div className="tb-notice">
-          <strong>本机存储</strong>
-          <span>项目、元件、图片、教程都存在本地；图片已占用 {formatSize(usage)}。把工具箱文件夹拷给别人，对方解压就能用。</span>
+          <strong>东西都在你自己的电脑上</strong>
+          <span>项目、元件、图片、教程一样都不上云；图片占了 {formatSize(usage)}。把这个文件夹拷给别人，对方解压就能用——不用装、不用联网。</span>
         </div>
 
         {notice && <div className="tb-ok">{notice}</div>}
@@ -371,7 +371,7 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         )}
 
         {loading ? (
-          <p className="tb-loading">正在打开本地工具箱…</p>
+          <p className="tb-loading">正在打开你的工具箱…</p>
         ) : (
           <>
             {/* 我的项目 */}
@@ -379,13 +379,13 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
               <div className="tb-section-head">
                 <h2>我的作品 <span className="tb-count">{projects.length}</span></h2>
                 {projects.some((p) => p.source?.type === 'sample') && (
-                  <span className="tb-hint">带「示例作品」标记的可以直接改了用，也可以删掉</span>
+                  <span className="tb-hint">带「示例作品」标记的，放心改、随便删——都是给你练手的</span>
                 )}
               </div>
               {projects.length === 0 ? (
                 <div className="tb-empty">
-                  <p>还没有项目</p>
-                  <span>点「＋ 新建项目」从零开始，或从下面的模板一键生成一个带教程的项目。</span>
+                  <p>还空着呢</p>
+                  <span>点「＋ 新建项目」从零开始；或者从下面挑个模板——出来的作品自带元件清单和图文教程。</span>
                 </div>
               ) : (
                 <div className="tb-grid">
@@ -395,7 +395,7 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
                         {/* 作品墙封面：有图用图，没图用渐变色 + 首字 */}
                         <ProjectCover projectId={p.id} name={p.name} coverImageId={p.coverImageId} />
                         <h3>{p.name}</h3>
-                        <p className="tb-project-notes">{p.notes || '还没有简介'}</p>
+                        <p className="tb-project-notes">{p.notes || '还没写简介'}</p>
                         <p className="tb-project-meta">
                           {p.componentCount} 个元件 · {p.imageCount} 张图片 · {formatTime(p.updatedAt)}
                         </p>
@@ -419,7 +419,7 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
             <section className="tb-section">
               <div className="tb-section-head">
                 <h2>内置项目模板 <span className="tb-count">{templates.length}</span></h2>
-                <span className="tb-hint">离线自带，含元件清单与图文教程</span>
+                <span className="tb-hint">离线自带 · 每个都配好了元件清单和图文教程</span>
               </div>
               <div className="tb-grid">
                 {templates.map((t) => (
@@ -444,7 +444,7 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         </>
       </main>
 
-      <footer className="tb-footer">CIRCUITORIUM 工具箱 · 本地优先</footer>
+      <footer className="tb-footer">CIRCUITORIUM 工具箱 · 东西都在你手里</footer>
 
       {showAi && (
         <AiSettingsModal

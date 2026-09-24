@@ -1,0 +1,3 @@
+[
+  "(() => JSON.stringify({ href: location.href, title: document.title, cards: document.querySelectorAll('.tb-project-main').length, headers: document.querySelectorAll('header').length, text: (document.body.innerText || '').replace(/\\s+/g, ' ').slice(0, 200) }))()"
+]

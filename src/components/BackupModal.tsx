@@ -28,8 +28,8 @@ export default function BackupModal({ onClose, onRestored }: Props) {
         return;
       }
       const saved = await saveBlob(res.blob, res.filename);
-      if (!saved.ok) { setErr('已取消保存'); return; }
-      setMsg(`已生成 ${res.filename}（${res.projectCount} 件作品，${formatBytes(res.bytes)}，保存在 ${saved.where}）`);
+      if (!saved.ok) { setErr('好，那就不存了'); return; }
+      setMsg(`存好了：${res.filename}（${res.projectCount} 件作品，${formatBytes(res.bytes)}），在 ${saved.where}`);
     } catch (e) {
       setErr(e instanceof Error ? e.message : '备份失败');
     } finally {
