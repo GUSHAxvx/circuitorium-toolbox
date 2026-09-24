@@ -1,0 +1,3 @@
+[
+  "(() => { const out = { url: location.href, desktop: '__TAURI_INTERNALS__' in window }; out.actions = [...document.querySelectorAll('.pj-head-actions button')].map((b) => ({ t: b.textContent.trim(), disabled: b.disabled })); out.toast = document.querySelector('.pj-toast')?.textContent || null; out.title = document.querySelector('.pj-title')?.textContent || null; out.hasInternals = !!window.__TAURI_INTERNALS__; out.invokeType = typeof window.__TAURI_INTERNALS__?.invoke; out.invokeName = window.__TAURI_INTERNALS__?.invoke?.name || null; out.invokeStr = String(window.__TAURI_INTERNALS__?.invoke).slice(0, 120); return JSON.stringify(out); })()"
+]

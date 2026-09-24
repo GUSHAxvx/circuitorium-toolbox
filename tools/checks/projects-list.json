@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const out = { path: location.pathname };\n  out.title = document.querySelector('.pjx-title')?.textContent || null;\n  out.newButton = !!document.querySelector('.pjx-btn-primary');\n  out.formOpen = !!document.querySelector('.pjx-create');\n  out.formInputs = document.querySelectorAll('.pjx-input').length;\n  out.cards = document.querySelectorAll('.pjx-card').length;\n  out.firstCard = (document.querySelector('.pjx-card')?.innerText || '').replace(/\\s+/g, ' ');\n  return JSON.stringify(out);\n})()"
+]

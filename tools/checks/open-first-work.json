@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  const cards = [...document.querySelectorAll('.tb-project-main')];\n  (cards.find((c) => (c.innerText || '').includes('循迹小车')) || cards[0]).click();\n  await sleep(3000);\n  return JSON.stringify({ title: document.querySelector('.pj-title')?.textContent || null, buttons: [...document.querySelectorAll('.pj-head-actions > button')].map((b) => b.textContent.trim()).join(' | ') });\n})()"
+]

@@ -1,0 +1,14 @@
+services:
+  app:
+    build: .
+    container_name: circuitorium
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    volumes:
+      # 数据库（首次部署可把本地 data.db 放到同目录，即可带上已有数据）
+      - ./data.db:/app/data.db
+      # 上传的图片
+      - ./uploads:/app/public/uploads

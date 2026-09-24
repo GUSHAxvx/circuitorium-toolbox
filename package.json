@@ -1,0 +1,46 @@
+{
+    "name": "component-recognition",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev",
+        "build": "next build",
+        "start": "next start",
+        "lint": "eslint",
+        "build:portable": "node tools/build-portable.mjs",
+        "build:desktop": "node tools/build-desktop.mjs",
+        "build:desktop-installer": "node tools/build-desktop.mjs --bundle",
+        "tauri": "tauri"
+    },
+    "dependencies": {
+        "@tauri-apps/api": "^2.11.1",
+        "bcryptjs": "^3.0.3",
+        "better-sqlite3": "^12.6.2",
+        "dexie": "^4.4.6",
+        "fflate": "^0.8.3",
+        "jsonwebtoken": "^9.0.3",
+        "next": "16.1.6",
+        "qrcode": "^1.5.4",
+        "react": "19.2.3",
+        "react-dom": "19.2.3",
+        "sharp": "^0.34.5",
+        "uuid": "^13.0.0"
+    },
+    "devDependencies": {
+        "@tailwindcss/postcss": "^4",
+        "@tauri-apps/cli": "^2.11.5",
+        "@types/bcryptjs": "^2.4.6",
+        "@types/better-sqlite3": "^7.6.13",
+        "@types/jsonwebtoken": "^9.0.10",
+        "@types/node": "^20",
+        "@types/qrcode": "^1.5.6",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/uuid": "^10.0.0",
+        "babel-plugin-react-compiler": "1.0.0",
+        "eslint": "^9",
+        "eslint-config-next": "16.1.6",
+        "tailwindcss": "^4",
+        "typescript": "^5"
+    }
+}

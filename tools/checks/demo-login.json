@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  const btn = [...document.querySelectorAll('button')].find((b) => (b.textContent || '').includes('课程演示'));\n  if (!btn) return JSON.stringify({ demoButton: false, buttons: [...document.querySelectorAll('button')].map((b) => (b.textContent || '').trim().slice(0, 12)) });\n  btn.click();\n  await sleep(6000);\n  return JSON.stringify({ demoButton: true, path: location.pathname, hasToken: !!localStorage.getItem('token') });\n})()"
+]

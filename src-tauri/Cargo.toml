@@ -1,0 +1,29 @@
+[package]
+name = "circuitorium-toolbox"
+version = "1.0.0"
+description = "CIRCUITORIUM 工具箱 · 本地电子工具箱（离线可用、拷贝即用）"
+authors = ["CIRCUITORIUM"]
+edition = "2021"
+rust-version = "1.77.2"
+
+[lib]
+name = "circuitorium_toolbox_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+tauri-plugin-dialog = "2"
+base64 = "0.22"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+# 发布版：体积优先（工具箱要能塞进 U 盘、微信发得出去）
+[profile.release]
+codegen-units = 1
+lto = true
+opt-level = "s"
+panic = "abort"
+strip = true

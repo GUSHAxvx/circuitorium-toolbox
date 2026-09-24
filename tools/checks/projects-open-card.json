@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const out = { path: location.pathname };\n  out.detailTitle = document.querySelector('.pj-title')?.textContent || null;\n  out.crumb = (document.querySelector('.pj-crumb')?.innerText || '').replace(/\\s+/g, ' ');\n  out.headActions = [...document.querySelectorAll('.pj-head-actions button')].map((b) => b.textContent.trim()).filter(Boolean).join(' | ');\n  out.cards = document.querySelectorAll('.pj-card').length;\n  return JSON.stringify(out);\n})()"
+]

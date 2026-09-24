@@ -1,0 +1,5 @@
+# Tauri 桌面版的 Rust 构建产物
+# 真正的 target 目录在 D 盘（D:\rust\target\circuitorium，由 D:\rust\cargo\config.toml 指定）
+# 这里只是防止万一在 src-tauri 下直接跑 cargo 时把中间文件留在项目里
+target/
+gen/schemas/

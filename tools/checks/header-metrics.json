@@ -1,0 +1,3 @@
+[
+  "(() => { const link = document.querySelector('header a'); const span = link?.querySelector('span'); const nav = document.querySelector('header nav'); const out = { vw: innerWidth, linkW: link?.getBoundingClientRect().width, spanW: span?.getBoundingClientRect().width, spanScrollW: span?.scrollWidth, text: span?.textContent, navW: nav?.getBoundingClientRect().width, navScrollW: nav?.scrollWidth, headerW: document.querySelector('header > div')?.getBoundingClientRect().width }; return JSON.stringify(out); })()"
+]

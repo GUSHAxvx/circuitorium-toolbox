@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  const crumb = document.querySelector('.pj-crumb-link');\n  if (crumb) { crumb.click(); await sleep(1800); }\n  return JSON.stringify({ atList: !!document.querySelector('.tb-project-main'), cards: document.querySelectorAll('.tb-project-main').length });\n})()"
+]
