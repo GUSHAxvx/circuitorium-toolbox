@@ -73,10 +73,14 @@ const copy = (from, toName) => {
   return true;
 };
 copy(path.join(releaseDir, 'circuitorium-toolbox.exe'), 'CIRCUITORIUM工具箱.exe');
+let staleInstaller = false;
 const nsisDir = path.join(releaseDir, 'bundle', 'nsis');
-if (fs.existsSync(nsisDir)) {
+if (withInstaller && fs.existsSync(nsisDir)) {
   const setup = fs.readdirSync(nsisDir).find((f) => f.endsWith('-setup.exe'));
   if (setup) copy(path.join(nsisDir, setup), 'CIRCUITORIUM工具箱-安装包.exe');
+} else if (fs.existsSync(path.join(distDesktop, 'CIRCUITORIUM工具箱-安装包.exe'))) {
+  // 这次没打安装包：不覆盖、也不用它冒充新产物
+  staleInstaller = true;
 }
 // 安装过旧安装包的话，旧文件会残留在 dist-desktop，这里只报告不删
 
@@ -124,6 +128,10 @@ function summary() {
   };
   listDir('dist-desktop', '桌面版');
   listDir('dist-toolbox', '便携版');
+  if (staleInstaller) {
+    console.log('   注意：dist-desktop\\CIRCUITORIUM工具箱-安装包.exe 是上一次打的，本次没有重新生成');
+    console.log('        要一起更新就加 --installer（npm run release:installer）');
+  }
   if (withTag) {
     console.log('\n  推上去： git push origin main --tags');
   }

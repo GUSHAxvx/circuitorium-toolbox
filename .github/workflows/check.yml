@@ -1,0 +1,26 @@
+# 每次 push / PR 自动跑一遍类型检查与代码检查
+# 说明：这里只做"能不能编译、有没有低级错误"，不跑浏览器断言
+#      （那些需要真实浏览器与本地存储，见 tools/checks/README.md，本地手动跑）
+
+name: 检查
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+      - name: 安装依赖
+        run: npm ci
+      - name: 类型检查
+        run: npx tsc --noEmit
+      - name: 代码检查
+        run: npx eslint
