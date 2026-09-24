@@ -1,6 +1,7 @@
-# 换行符统一：源码用 LF，Windows 脚本锁死 CRLF
-# 背景：tools/portable/启动.bat 若是 LF，.bat 里的 goto 标签会失效、便携版起不来
-#       server.ps1 还必须是「UTF-8 + BOM + CRLF」，否则 PowerShell 5.1 按 GBK 解析会语法报错
+# 换行符统一：源码用 LF，批处理脚本锁死 CRLF
+# 背景（两个都踩过）：
+#   - tools/portable/启动.bat 若是 LF，.bat 里的 goto 标签会失效、便携版起不来 → 必须 CRLF
+#   - tools/portable/server.ps1 只挑「UTF-8 + BOM」，换行符 LF/CRLF 都行（BOM 已写在文件里）
 * text=auto
 
 .gitattributes text eol=lf
@@ -18,11 +19,11 @@
 *.toml text eol=lf
 *.yml  text eol=lf
 *.yaml text eol=lf
+*.ps1  text eol=lf
 
-# Windows 脚本：工作区保留 CRLF，不要自动转换
+# Windows 批处理：工作区保留 CRLF，不要自动转换
 *.bat text eol=crlf
 *.cmd text eol=crlf
-*.ps1 text eol=crlf
 
 # 二进制：不要做任何换行或编码处理
 *.png  binary
