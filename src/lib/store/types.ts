@@ -124,7 +124,8 @@ export interface ImportedBundle {
 }
 
 /** 详情页展示用的统计 */
-export interface LocalStats {  componentCount: number;
+export interface LocalStats {
+  componentCount: number;
   imageCount: number;
   fileSizeBytes: number;
   projectType: string;
@@ -150,11 +151,70 @@ export interface ComponentInput {
 }
 
 /**
+ * 元件库数据模型。
+ *
+ * 内置库随软件打包、只读；用户库存在本机，可读写。查询时两个库合并，同一个 id 以用户库为准。
+ * 作品文件（.ecp）里会带一份 components_snapshot，别人打开时可以把新元件收进自己的库。
+ */
+export type LibrarySource = 'builtin' | 'user_created' | 'imported' | 'ai_temp';
+
+export interface LibraryComponentInput {
+  id?: string;
+  name: string;
+  aliases?: string[];
+  category: string;
+  purpose: string;
+  appearance: string;
+  polarity: string;
+  commonModels?: string[];
+  pinCount?: number;
+  package?: string;
+  family?: string;
+  specs?: Record<string, string>;
+  commonMistakes?: string[];
+  howToRead: string;
+  usedInProjects?: string[];
+  tags?: string[];
+  /** 图片二进制（用户自建 / AI 临时元件用；内置元件走静态路径，不用这个） */
+  image?: Blob | null;
+  source: LibrarySource;
+  verified?: boolean;
+  author?: string;
+  /** 从哪件作品带进来的（source: imported 时记） */
+  fromProject?: string;
+  createdAt?: string;
+}
+
+export interface LibraryComponent extends LibraryComponentInput {
+  id: string;
+  /** 可直接显示的图片地址：内置是 /library/xxx.png，用户元件是 blob 地址 */
+  imageUrl?: string;
+  /** 图形署名（用了第三方图形的元件要带上） */
+  imageCredit?: string;
+}
+
+/**
  * 工具箱数据接口。
  * 现在由 IndexedDB 实现；Tauri 版会提供同样的 SQLite 实现，界面代码不需要改。
  */
 export interface ToolboxStore {
   ready(): Promise<void>;
+
+  // ===== 元件库 =====
+  /** 内置 + 用户自己的，合并后返回（同一个 id 以用户库为准） */
+  listLibrary(): Promise<LibraryComponent[]>;
+  getLibraryComponent(id: string): Promise<LibraryComponent | null>;
+  /** 存进用户库（用户自建 / AI 临时 / 从作品导入） */
+  saveLibraryComponent(input: LibraryComponentInput): Promise<string>;
+  /** 只删用户库里的；内置的删不掉 */
+  removeLibraryComponent(id: string): Promise<void>;
+  /** 从作品里带进来的元件：同 id 跳过、同名不同 id 都保留 */
+  importLibraryComponents(
+    items: LibraryComponentInput[],
+    fromProject?: string
+  ): Promise<{ added: LibraryComponent[]; skipped: LibraryComponent[] }>;
+  /** 用户自建元件的图片（存在本地存储里，返回可直接显示的地址） */
+  libraryImageUrl(id: string): Promise<string | null>;
 
   listProjects(): Promise<ProjectSummary[]>;
   getProject(id: string): Promise<ProjectBundle | null>;

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SiteHeader from '@/components/SiteHeader';
 import ProjectDetailView from '@/components/ProjectDetailView';
+import ComponentLibraryView from '@/components/ComponentLibraryView';
 import ShareWorkModal from '@/components/ShareWorkModal';
 import LocalAiRecognize from '@/components/LocalAiRecognize';
 import AiSettingsModal from '@/components/AiSettingsModal';
@@ -19,6 +20,7 @@ import { bgGradient, gridBg } from '@/styles/theme';
 export default function ToolboxPage() {
   // 打开项目时在同一路由内切换视图：不发网络请求，断网也能用
   const [openId, setOpenId] = useState<string | null>(null);
+  const [showLibrary, setShowLibrary] = useState(false);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [templates, setTemplates] = useState<ToolboxTemplate[]>([]);
   const [usage, setUsage] = useState(0);
@@ -244,6 +246,31 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
     return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())} ${p(d.getHours())}:${p(d.getMinutes())}`;
   };
 
+  // 元件库：和作品页一样，同一路由内切换视图（断网也能用）
+  if (showLibrary) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#070a14', position: 'relative', overflowX: 'hidden', minWidth: '320px' }}>
+        <div style={bgGradient} />
+        <div style={gridBg} />
+        <SiteHeader
+          homeHref="/toolbox"
+          links={[{ href: '/toolbox', label: '工具箱' }]}
+          maxWidth={1200}
+          right={
+            <span style={{
+              padding: '4px 10px', borderRadius: '999px', fontSize: '11.5px', fontWeight: 700,
+              background: 'rgba(34,197,94,0.12)', color: '#6ee7b7',
+              border: '1px solid rgba(34,197,94,0.3)', flexShrink: 0,
+            }}>
+              本地模式
+            </span>
+          }
+        />
+        <ComponentLibraryView onBack={() => setShowLibrary(false)} />
+      </div>
+    );
+  }
+
   // 打开作品时直接整页交给「作品详情页」：
   // 它自带页头与 1400px 的版心，不能再套在工具箱的 tb-main（1200px）里，
   // 否则版心被压窄、两层内边距叠加，看起来"尺寸很奇怪"。
@@ -308,6 +335,9 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
             </p>
           </div>
           <div className="tb-actions">
+            <button className="tb-btn tb-btn-ghost" onClick={() => setShowLibrary(true)}>
+              元件库
+            </button>
             <button className="tb-btn tb-btn-ghost" onClick={() => setShowBackup(true)}>
               备份与恢复
             </button>

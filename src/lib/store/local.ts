@@ -4,12 +4,15 @@
 import Dexie, { type Table } from 'dexie';
 import { deriveScenarioTags } from '@/lib/scenarioTags';
 import { compressImage } from '@/lib/images';
+import { BUILTIN_LIBRARY, BUILTIN_LIBRARY_IDS } from '@/lib/library/builtin';
 import { TEMPLATE_SEED } from './templateSeed';
 import { SAMPLE_SEED } from './sampleSeed';
 import type {
   ComponentInput,
   ImageKind,
   ImportedBundle,
+  LibraryComponent,
+  LibraryComponentInput,
   LocalStats,
   ProjectBundle,
   ProjectSource,
@@ -27,6 +30,9 @@ const DB_NAME = 'circuitorium-toolbox';
 /** 示例作品是否已写入过（只写一次，用户删掉后不会再自动回来） */
 const SAMPLE_FLAG = '__samples_seeded';
 
+/** 用户库里的元件：图片存二进制，其余字段与 LibraryComponent 一致 */
+type StoredLibraryComponent = Omit<LibraryComponent, 'image' | 'imageUrl'> & { image?: Blob | null };
+
 class ToolboxDB extends Dexie {
   projects!: Table<ToolboxProject, string>;
   components!: Table<ToolboxComponent, string>;
@@ -34,6 +40,8 @@ class ToolboxDB extends Dexie {
   images!: Table<ToolboxImage, string>;
   templates!: Table<ToolboxTemplate, string>;
   settings!: Table<ToolboxSetting, string>;
+  /** 用户自己的元件库（内置库不在这里，是打包在软件里的只读数据） */
+  library!: Table<StoredLibraryComponent, string>;
 
   constructor() {
     super(DB_NAME);
@@ -44,6 +52,10 @@ class ToolboxDB extends Dexie {
       images: 'id, projectId, createdAt',
       templates: 'id, sortOrder',
       settings: 'key',
+    });
+    // v2：加元件库（用户自建 / AI 临时 / 从作品导入）
+    this.version(2).stores({
+      library: 'id, source, category, name, createdAt',
     });
   }
 }
@@ -72,6 +84,8 @@ const emptySource = (): ProjectSource => ({ type: 'manual' });
 class LocalToolboxStore implements ToolboxStore {
   private opened: Promise<void> | null = null;
   private urlCache = new Map<string, string>();
+  /** 用户自建元件的图片地址缓存（内置元件走静态路径，不进这里） */
+  private libraryUrlCache = new Map<string, string>();
 
   ready(): Promise<void> {
     if (!this.opened) {
@@ -415,6 +429,8 @@ class LocalToolboxStore implements ToolboxStore {
   releaseImageUrls(): void {
     for (const url of this.urlCache.values()) URL.revokeObjectURL(url);
     this.urlCache.clear();
+    for (const url of this.libraryUrlCache.values()) URL.revokeObjectURL(url);
+    this.libraryUrlCache.clear();
   }
 
   // ===== 统计 =====
@@ -477,6 +493,102 @@ class LocalToolboxStore implements ToolboxStore {
     }
 
     return projectId;
+  }
+
+  // ===== 元件库 =====
+  // 内置库（打包在软件里，只读）+ 用户库（本机 IndexedDB），查询时合并，同 id 以用户库为准。
+
+  async listLibrary(): Promise<LibraryComponent[]> {
+    await this.ready();
+    const merged = new Map<string, LibraryComponent>();
+    for (const item of BUILTIN_LIBRARY) merged.set(item.id, item);
+
+    const rows = await db().library.toArray();
+    for (const row of rows) {
+      let url = this.libraryUrlCache.get(row.id);
+      if (!url && row.image) {
+        url = URL.createObjectURL(row.image);
+        this.libraryUrlCache.set(row.id, url);
+      }
+      merged.set(row.id, { ...row, imageUrl: url });
+    }
+    return [...merged.values()];
+  }
+
+  async getLibraryComponent(id: string): Promise<LibraryComponent | null> {
+    const all = await this.listLibrary();
+    return all.find((c) => c.id === id) ?? null;
+  }
+
+  async saveLibraryComponent(input: LibraryComponentInput): Promise<string> {
+    await this.ready();
+    const id = (input.id || '').trim() || newId('lib_');
+    if (BUILTIN_LIBRARY_IDS.has(id)) {
+      throw new Error('这个编号和内置元件重了，换个名字吧');
+    }
+    const previous = await db().library.get(id);
+    const { image, ...rest } = input;
+    const row: StoredLibraryComponent = {
+      ...rest,
+      id,
+      createdAt: input.createdAt || previous?.createdAt || nowIso(),
+      // image 传 undefined 表示"不改图片"；传 null 表示清掉
+      image: image === undefined ? previous?.image ?? null : image,
+    };
+    await db().library.put(row);
+
+    const cached = this.libraryUrlCache.get(id);
+    if (cached) {
+      URL.revokeObjectURL(cached);
+      this.libraryUrlCache.delete(id);
+    }
+    return id;
+  }
+
+  async removeLibraryComponent(id: string): Promise<void> {
+    await this.ready();
+    if (BUILTIN_LIBRARY_IDS.has(id)) return; // 内置的删不掉
+    const cached = this.libraryUrlCache.get(id);
+    if (cached) {
+      URL.revokeObjectURL(cached);
+      this.libraryUrlCache.delete(id);
+    }
+    await db().library.delete(id);
+  }
+
+  /** 从作品里带进来的元件：同 id 跳过（保留本地版本），同名不同 id 都保留 */
+  async importLibraryComponents(
+    items: LibraryComponentInput[],
+    fromProject?: string
+  ): Promise<{ added: LibraryComponent[]; skipped: LibraryComponent[] }> {
+    await this.ready();
+    const added: LibraryComponent[] = [];
+    const skipped: LibraryComponent[] = [];
+    const existing = new Map((await db().library.toArray()).map((r) => [r.id, r]));
+
+    for (const item of items) {
+      const id = (item.id || '').trim();
+      if (!id || BUILTIN_LIBRARY_IDS.has(id) || existing.has(id)) {
+        skipped.push({ ...item, id, source: item.source || 'imported' });
+        continue;
+      }
+      await this.saveLibraryComponent({ ...item, id, source: 'imported', fromProject });
+      const saved = await this.getLibraryComponent(id);
+      if (saved) added.push(saved);
+      existing.set(id, { ...item, id } as StoredLibraryComponent);
+    }
+    return { added, skipped };
+  }
+
+  async libraryImageUrl(id: string): Promise<string | null> {
+    await this.ready();
+    const row = await db().library.get(id);
+    if (!row?.image) return null;
+    const cached = this.libraryUrlCache.get(id);
+    if (cached) return cached;
+    const url = URL.createObjectURL(row.image);
+    this.libraryUrlCache.set(id, url);
+    return url;
   }
 
   // ===== 设置（AI Key 等，只存本机）=====

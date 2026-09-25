@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  [...document.querySelectorAll('.tb-actions button')].find((b) => b.textContent.trim() === '元件库')?.click();\n  await sleep(2200);\n  return JSON.stringify({ cards: document.querySelectorAll('.lib-card').length, title: document.querySelector('.lib-title')?.textContent });\n})()"
+]

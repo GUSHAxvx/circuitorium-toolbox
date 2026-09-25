@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T05:25:28+00:00",
+  "generatedAt": "2026-09-25T05:39:22+00:00",
   "source": {
     "repo": "https://github.com/fritzing/fritzing-parts",
     "commit": "27535f2fd02097be9bed229b75aa8e9be282a4a0",
@@ -230,9 +230,12 @@
       },
       "id": "diode",
       "fzpPath": "core/diode_1N4001_300mil.fzp",
+      "svgOverrideUsed": {
+        "breadboard": "svg/core/breadboard/P1000K_diode.svg"
+      },
       "svgFiles": {
         "icon": "svg_raw/diode/basic-diode.svg",
-        "breadboard": "svg_raw/diode/diode.svg",
+        "breadboard": "svg_raw/diode/P1000K_diode.svg",
         "schematic": "svg_raw/diode/diode.svg",
         "pcb": "svg_raw/diode/DO-41_diode_2_300mil_pcb.svg"
       }

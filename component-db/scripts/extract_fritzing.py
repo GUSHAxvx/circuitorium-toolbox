@@ -185,7 +185,12 @@ def main() -> int:
 
         # 取图形：面包板图优先，另外把图标/原理图也留着备用
         saved: dict[str, str] = {}
-        for view, image in data["images"].items():
+        overrides = part.get("svgOverride", {})
+        wanted = dict(data["images"])
+        for view, path in overrides.items():
+            wanted[view] = path  # 覆盖：用指定的 SVG 代替 fzp 里写的那张
+            data.setdefault("svgOverrideUsed", {})[view] = path
+        for view, image in wanted.items():
             # .fzp 里写的是相对于 svg/core/ 的路径，例如 "breadboard/resistor_220.svg"
             candidates = [f"svg/core/{image}", f"svg/{image}", image]
             for candidate in candidates:
@@ -205,6 +210,18 @@ def main() -> int:
               f"图 {','.join(saved) or '无'}")
 
     out_dir.mkdir(parents=True, exist_ok=True)
+    dest = out_dir / "fritzing_raw.json"
+
+    # --only 是增量：把这次提取的元件并回已有结果，别把别的元件冲掉
+    if args.only and dest.exists():
+        try:
+            old = json.loads(dest.read_text(encoding="utf-8"))
+            keep = [p for p in old.get("parts", []) if p.get("id") not in {r["id"] for r in results}]
+            results = keep + results
+            print(f"[提取] 增量模式：保留已有 {len(keep)} 个，本次更新 {len(results) - len(keep)} 个")
+        except (OSError, ValueError):
+            print("[提取] 旧的 fritzing_raw.json 读不出来，按全量重写")
+
     payload = {
         "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "source": {
@@ -215,7 +232,6 @@ def main() -> int:
         },
         "parts": results,
     }
-    dest = out_dir / "fritzing_raw.json"
     dest.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
     print(f"[提取] 完成：{len(results)} 个元件 → {dest}")
     return 0

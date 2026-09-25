@@ -1,10 +1,15 @@
 {
   "_comment": "要提取的元件清单：id 是我们自己的短名，fzp 是 Fritzing 仓库里的路径。先跑通 5 个，确认效果后再扩到 30 个。",
+  "_svgOverride_comment": "可选：svgOverride 用来换掉某个视图的图。1N4001 官方给的面包板图是电路符号，初学者要认的是实物，所以换成同族整流二极管的实物图；技术参数仍以 fzp 为准。",
   "parts": [
     { "id": "resistor", "fzp": "core/resistor.fzp" },
     { "id": "led", "fzp": "core/LED-generic-5mm_6852162_005.fzp" },
     { "id": "capacitor-ceramic", "fzp": "core/capacitor_ceramic_100mil.fzp" },
     { "id": "transistor-npn", "fzp": "core/transistor_signal_NPN_TO92_EBC.fzp" },
-    { "id": "diode", "fzp": "core/diode_1N4001_300mil.fzp" }
+    {
+      "id": "diode",
+      "fzp": "core/diode_1N4001_300mil.fzp",
+      "svgOverride": { "breadboard": "svg/core/breadboard/P1000K_diode.svg" }
+    }
   ]
 }
