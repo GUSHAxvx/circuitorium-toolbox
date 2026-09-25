@@ -57,6 +57,12 @@ if (files['images.json']) {
   const list = i.images || i;
   console.log(`图片: ${Array.isArray(list) ? list.length : '?'}`);
 }
+if (files['code.json']) {
+  const code = JSON.parse(dec.decode(files['code.json']));
+  console.log(`程序代码(${code.length}): ${code.map((c) => `${c.name}[${c.language}] ${c.content.split('\n').length}行`).join('、')}`);
+} else {
+  console.log('程序代码: 无');
+}
 const raw = dec.decode(buf);
 const leak = raw.match(/sk-[A-Za-z0-9]{4,}|apiKey|api_key|ai_config|teacherCode|"token"/g);
 console.log(`凭据泄漏检查: ${leak ? `发现可疑内容 ${JSON.stringify([...new Set(leak)])}` : '干净（没有 Key / 配置项）'}`);

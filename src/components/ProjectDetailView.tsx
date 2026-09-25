@@ -6,6 +6,8 @@ import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import QRCodeBox from '@/components/QRCodeBox';
 import LibraryPicker from '@/components/LibraryPicker';
+import ProjectCodePanel from '@/components/ProjectCodePanel';
+import { DIFFICULTY_LABEL, type ProjectDifficulty } from '@/lib/store/types';
 import { getToken, authHeaders, copyText } from '@/lib/client';
 import { bgGradient, gridBg } from '@/styles/theme';
 import {
@@ -29,6 +31,10 @@ interface Project {
   author_name?: string;
   /** 本地模式：作品来源 manual / template / shared / sample */
   source_type?: string;
+  /** 本地模式：难度 始解 / 卍解（服务器数据没有这个字段） */
+  difficulty?: ProjectDifficulty;
+  /** 卍解项目的开发环境说明 */
+  code_note?: string;
 }
 
 interface ProjectComponent {
@@ -229,6 +235,9 @@ export default function ProjectDetailView({
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const isLocal = mode === 'local';
+  /** 卍解项目：要写代码，项目里多一块「程序代码」 */
+  const [difficulty, setDifficulty] = useState<ProjectDifficulty>('shikai');
+  const isBankai = isLocal && difficulty === 'bankai';
   const isShareView = !!shareToken;
   const endpoint = isShareView
     ? `/api/share-project?token=${encodeURIComponent(String(shareToken))}`
@@ -301,6 +310,7 @@ export default function ProjectDetailView({
           setStats(data.stats);
           setIsOwner(true);
           setFeaturesDerived(data.featuresDerived);
+          setDifficulty(data.project.difficulty === 'bankai' ? 'bankai' : 'shikai');
         }
       } catch (e) {
         setToast(e instanceof Error ? e.message : '这台电脑的本地存储打不开');
@@ -883,7 +893,13 @@ export default function ProjectDetailView({
                 </>
               )}
               {isLocal ? (
-                localSourceTag && <span className={localSourceTag.cls}>{localSourceTag.label}</span>
+                <>
+                  {/* 难度徽标：始解 = 不用写代码；卍解 = 要写代码，功能更全 */}
+                  <span className={`pj-diff pj-diff-${isBankai ? 'bankai' : 'shikai'}`} title={DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].hint}>
+                    {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].name} · {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].short}
+                  </span>
+                  {localSourceTag && <span className={localSourceTag.cls}>{localSourceTag.label}</span>}
+                </>
               ) : project.is_shared ? (
                 <span className="pj-tag pj-tag-green"><Icon name="check" size={12} color="#34d399" />已公开分享</span>
               ) : owner ? (
@@ -1586,6 +1602,11 @@ export default function ProjectDetailView({
             )}
           </div>
         )}
+
+        {/* ===== 程序代码：只有卍解难度的作品才有这一块 ===== */}
+        {isLocal && isBankai && (
+          <ProjectCodePanel projectId={String(projectId)} onChange={() => void loadProject()} />
+        )}
       </main>
 
       <footer className="pj-footer">
@@ -1748,6 +1769,9 @@ export default function ProjectDetailView({
         .pj-tag-sm { font-size: 10.5px; padding: 2px 8px; }
         .pj-tag-blue { background: rgba(79,124,255,0.14); }
         .pj-tag-green { background: rgba(34,197,94,0.12); color: #6ee7b7; border-color: rgba(34,197,94,0.3); }
+        .pj-diff { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.5px; border: 1px solid transparent; }
+        .pj-diff-shikai { background: rgba(148,163,184,0.14); color: #cbd5e1; border-color: rgba(148,163,184,0.3); }
+        .pj-diff-bankai { background: rgba(251,191,36,0.14); color: #fcd34d; border-color: rgba(251,191,36,0.34); }
 
         .pj-head-actions { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; }
         .pj-btn {

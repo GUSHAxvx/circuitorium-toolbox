@@ -10,6 +10,7 @@ import {
   extForMime,
   isExpectedEntry,
   isSafeEntryName,
+  normalizeCode,
   normalizeComponents,
   normalizeImages,
   normalizeSections,
@@ -100,7 +101,10 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
       components: bundle.components.length,
       sections: bundle.sections.length,
       images: bundle.images.length,
+      code: bundle.codeFiles?.length || 0,
     },
+    difficulty: bundle.project.difficulty === 'bankai' ? 'bankai' : 'shikai',
+    ...(bundle.project.codeNote ? { codeNote: bundle.project.codeNote } : {}),
     // 明确声明：作品文件里没有本机设置与凭据（用中文写，方便人直接看文件）
     excludes: ['本机设置', '识别凭据', '访问令牌', '本机文件路径'],
   };
@@ -152,6 +156,18 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
   ];
   files['images.json'] = [textBytes(JSON.stringify(imageMetas, null, 2)), { level: 6 }];
 
+  // ===== 程序代码（卍解项目）：跟着作品一起走，别人打开就能看、能抄、能改 =====
+  const codeFiles = bundle.codeFiles || [];
+  if (codeFiles.length > 0) {
+    files['code.json'] = [
+      textBytes(JSON.stringify(
+        codeFiles.map((c) => ({
+          name: c.name, language: c.language, content: c.content, note: c.note, sortOrder: c.sortOrder,
+        })), null, 2)),
+      { level: 6 },
+    ];
+  }
+
   // ===== 元件快照：作品用到的元件库里那些"不是内置"的元件，跟着作品走 =====
   // 内置元件只写引用（对方软件里本来就有）；用户自建 / 识别来的 / 别人传来的写完整定义 + 图片。
   const snapshot = await buildLibrarySnapshot(projectId, files, warnings);
@@ -166,6 +182,8 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
       + `用工具箱里的「打开作品」选择这个文件即可查看，并可一键做成自己的版本。\n`
       + `作者：${manifest.project.author || '未署名'}\n`
       + `元件 ${manifest.counts.components} 个 · 教程 ${manifest.counts.sections} 节 · 图片 ${manifest.counts.images} 张\n`
+      + (codeFiles.length > 0 ? `程序代码 ${codeFiles.length} 个（${codeFiles.map((c) => c.name).join('、')}）\n` : '')
+      + (manifest.difficulty === 'bankai' ? '这是「卍解」难度的作品：要写代码。\n' : '')
       + (snapshot.components.length > 0
         ? `作品里还带着 ${snapshot.components.filter((c) => c.source !== 'builtin').length} 个自定义元件，打开后可以收进自己的元件库。\n`
         : '')
@@ -346,6 +364,7 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
 
   const store = getStore();
   const author = manifest.project.author || fallbackAuthor;
+  const codeFiles = normalizeCode(parseJson('code.json'));
   const projectId = await store.importBundle({
     project: {
       name: manifest.project.name,
@@ -353,6 +372,8 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
       description: manifest.project.description,
       features: manifest.project.features,
       source: { type: 'shared', author, ref: manifest.project.name, version: `v${manifest.version}` },
+      difficulty: manifest.difficulty === 'bankai' ? 'bankai' : 'shikai',
+      ...(manifest.codeNote ? { codeNote: manifest.codeNote } : {}),
       views: 0,
       remixCount: 0,
       createdAt: manifest.project.createdAt || new Date().toISOString(),
@@ -368,6 +389,10 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
     })),
     sections: sections.map((s) => ({ type: s.type, title: s.title, content: s.content, sortOrder: s.sortOrder })),
     images,
+    codeFiles: codeFiles.map((c) => ({
+      name: c.name, language: c.language, content: c.content, note: c.note,
+      sortOrder: c.sortOrder, createdAt: manifest.project.createdAt || new Date().toISOString(),
+    })),
   });
 
   // ===== 作品里带来的自定义元件：先攒着，等用户确认再写入本地元件库 =====

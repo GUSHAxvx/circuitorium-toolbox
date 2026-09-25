@@ -71,7 +71,14 @@ export async function buildEcpBytes(bundle: ProjectBundle, author: string): Prom
       createdAt: bundle.project.createdAt,
       updatedAt: bundle.project.updatedAt,
     },
-    counts: { components: bundle.components.length, sections: bundle.sections.length, images: index },
+    counts: {
+      components: bundle.components.length,
+      sections: bundle.sections.length,
+      images: index,
+      code: (bundle.codeFiles || []).length,
+    },
+    difficulty: bundle.project.difficulty === 'bankai' ? 'bankai' : 'shikai',
+    ...(bundle.project.codeNote ? { codeNote: bundle.project.codeNote } : {}),
     excludes: ['本机设置', '识别凭据', '访问令牌', '本机文件路径'],
   };
 
@@ -92,6 +99,17 @@ export async function buildEcpBytes(bundle: ProjectBundle, author: string): Prom
     { level: 6 },
   ];
   files['images.json'] = [new TextEncoder().encode('[]'), { level: 6 }];
+
+  // 卍解作品的程序代码：分享页存下来的作品也要带着
+  if ((bundle.codeFiles || []).length > 0) {
+    files['code.json'] = [
+      new TextEncoder().encode(JSON.stringify(
+        (bundle.codeFiles || []).map((c) => ({
+          name: c.name, language: c.language, content: c.content, note: c.note, sortOrder: c.sortOrder,
+        })), null, 2)),
+      { level: 6 },
+    ];
+  }
 
   // 作品用到的自定义元件也一起带上：对方从分享页存下作品时，元件会跟着进他的元件库
   try {

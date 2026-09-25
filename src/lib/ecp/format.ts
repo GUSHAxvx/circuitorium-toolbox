@@ -43,9 +43,22 @@ export interface EcpManifest {
     createdAt: string;
     updatedAt: string;
   };
-  counts: { components: number; sections: number; images: number };
+  counts: { components: number; sections: number; images: number; code?: number };
+  /** 难度：始解 / 卍解（老文件没有这个字段，一律当始解） */
+  difficulty?: 'shikai' | 'bankai';
+  /** 卍解项目：开发环境 / 要用到的库 */
+  codeNote?: string;
   /** 明确记录：作品文件不包含任何本机设置与密钥 */
   excludes: string[];
+}
+
+/** 卍解项目里的一段程序代码（存在 code.json 里） */
+export interface EcpCodeFile {
+  name: string;
+  language: string;
+  content: string;
+  note: string;
+  sortOrder: number;
 }
 
 export interface EcpComponent {
@@ -129,12 +142,27 @@ export function isSafeEntryName(name: string): boolean {
 /** 只允许我们认识的条目名 */
 export function isExpectedEntry(name: string): boolean {
   if ([
-    'manifest.json', 'components.json', 'sections.json', 'images.json',
+    'manifest.json', 'components.json', 'sections.json', 'images.json', 'code.json',
     'components_snapshot.json', 'thumbnail.jpg', 'README.txt',
   ].includes(name)) {
     return true;
   }
   return /^images\/[A-Za-z0-9._-]+$/.test(name);
+}
+
+/** 代码校验并清洗（别人的作品文件可能塞奇奇怪怪的东西，宁缺毋滥） */
+export function normalizeCode(raw: unknown): EcpCodeFile[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 20).map((item, i) => {
+    const c = (item || {}) as Partial<EcpCodeFile>;
+    return {
+      name: clampText(c.name, 80).trim() || `代码${i + 1}.txt`,
+      language: clampText(c.language, 24).trim(),
+      content: typeof c.content === 'string' ? c.content.slice(0, 200_000) : '',
+      note: clampText(c.note, 200),
+      sortOrder: clampInt(c.sortOrder, 0, 9999, i),
+    };
+  }).filter((c) => c.content.length > 0);
 }
 
 /** 快照里允许的字段长度上限（防止别人塞超长文本） */
@@ -263,7 +291,13 @@ export function validateManifest(raw: unknown): { ok: true; manifest: EcpManifes
         components: clampInt((m.counts || {}).components, 0, ECP_LIMITS.maxComponents, 0),
         sections: clampInt((m.counts || {}).sections, 0, ECP_LIMITS.maxSections, 0),
         images: clampInt((m.counts || {}).images, 0, ECP_LIMITS.maxImages, 0),
+        code: clampInt((m.counts || {}).code, 0, 20, 0),
       },
+      // 难度与开发环境说明也要带过来（不然卍解作品打开后会变成始解）
+      difficulty: m.difficulty === 'bankai' ? 'bankai' : 'shikai',
+      ...(typeof m.codeNote === 'string' && m.codeNote.trim()
+        ? { codeNote: clampText(m.codeNote, 200) }
+        : {}),
       excludes: Array.isArray(m.excludes) ? m.excludes.filter((x) => typeof x === 'string').slice(0, 20) : [],
     },
   };

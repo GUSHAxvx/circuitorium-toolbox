@@ -10,7 +10,8 @@ import AiSettingsModal from '@/components/AiSettingsModal';
 import BackupModal from '@/components/BackupModal';
 import AboutModal from '@/components/AboutModal';
 import ImportLibraryPrompt from '@/components/ImportLibraryPrompt';
-import type { LibraryComponentInput } from '@/lib/store/types';
+import type { LibraryComponentInput, ProjectDifficulty } from '@/lib/store/types';
+import { DIFFICULTY_LABEL } from '@/lib/store/types';
 import { getStore } from '@/lib/store';
 import { importEcpToStore, exportProjectToEcp } from '@/lib/ecp/io';
 import { saveBlob } from '@/lib/saveFile';
@@ -38,6 +39,7 @@ export default function ToolboxPage() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [newName, setNewName] = useState('');
+  const [newDifficulty, setNewDifficulty] = useState<ProjectDifficulty>('shikai');
   const [showCreate, setShowCreate] = useState(false);
   const [notice, setNotice] = useState('');
   const [workCodeInput, setWorkCodeInput] = useState('');
@@ -83,8 +85,9 @@ export default function ToolboxPage() {
     setBusy(true);
     try {
       const store = getStore();
-      const id = await store.createProject({ name: newName });
+      const id = await store.createProject({ name: newName, difficulty: newDifficulty });
       setNewName('');
+      setNewDifficulty('shikai');
       setShowCreate(false);
       await refresh();
       setOpenId(id);
@@ -439,6 +442,20 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
               </button>
               <button className="tb-btn tb-btn-ghost" onClick={() => { setShowCreate(false); setNewName(''); }}>取消</button>
             </div>
+            <div className="tb-diff">
+              <span className="tb-diff-label">难度</span>
+              {(['shikai', 'bankai'] as ProjectDifficulty[]).map((d) => (
+                <button
+                  key={d}
+                  className={`tb-diff-opt${newDifficulty === d ? ' tb-diff-opt-on' : ''}`}
+                  onClick={() => setNewDifficulty(d)}
+                  type="button"
+                >
+                  <span className="tb-diff-name">{DIFFICULTY_LABEL[d].name}</span>
+                  <span className="tb-diff-hint">{DIFFICULTY_LABEL[d].hint}</span>
+                </button>
+              ))}
+            </div>
           </section>
         )}
 
@@ -472,9 +489,13 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
                           {p.componentCount} 个元件 · {p.imageCount} 张图片 · {formatTime(p.updatedAt)}
                         </p>
                         <span className="tb-badges">
+                          <span className={`tb-badge tb-diff-badge tb-diff-${p.difficulty === 'bankai' ? 'bankai' : 'shikai'}`}>
+                            {DIFFICULTY_LABEL[p.difficulty === 'bankai' ? 'bankai' : 'shikai'].name}
+                          </span>
                           {p.source?.type === 'sample' && <span className="tb-badge tb-badge-green">示例作品</span>}
                           {p.source?.type === 'template' && <span className="tb-badge">来自模板</span>}
                           {p.source?.type === 'shared' && <span className="tb-badge tb-badge-blue">收到的作品</span>}
+                          {!!p.codeCount && <span className="tb-badge tb-badge-blue">{p.codeCount} 段代码</span>}
                         </span>
                       </button>
                       <div className="tb-project-actions">
@@ -608,6 +629,15 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         .tb-project-meta { margin: 0; font-size: 11.5px; color: rgba(255,255,255,0.38); }
         .tb-badge { display: inline-block; margin-top: 8px; padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700; background: rgba(167,139,250,0.14); color: #c4b5fd; border: 1px solid rgba(167,139,250,0.3); }
         .tb-badge-blue { background: rgba(79,124,255,0.14); color: #bcd0ff; border-color: rgba(79,124,255,0.3); }
+        .tb-diff-badge { letter-spacing: 0.5px; }
+        .tb-diff-shikai { background: rgba(148,163,184,0.14); color: #cbd5e1; border-color: rgba(148,163,184,0.3); }
+        .tb-diff-bankai { background: rgba(251,191,36,0.14); color: #fcd34d; border-color: rgba(251,191,36,0.34); }
+        .tb-diff { display: flex; align-items: center; gap: 10px; margin-top: 14px; flex-wrap: wrap; }
+        .tb-diff-label { font-size: 12.5px; color: rgba(255,255,255,0.45); }
+        .tb-diff-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 9px 14px; border-radius: 11px; cursor: pointer; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); font-family: inherit; text-align: left; }
+        .tb-diff-opt-on { background: rgba(102,126,234,0.16); border-color: rgba(102,126,234,0.5); }
+        .tb-diff-name { font-size: 13.5px; font-weight: 800; color: #fff; letter-spacing: 0.5px; }
+        .tb-diff-hint { font-size: 11.5px; color: rgba(255,255,255,0.45); }
         .tb-project-actions { display: flex; gap: 8px; }
         .tb-mini {
           flex: 1; padding: 7px 10px; border-radius: 8px; font-size: 12px; font-weight: 600; cursor: pointer;

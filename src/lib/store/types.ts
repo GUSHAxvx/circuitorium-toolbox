@@ -3,6 +3,34 @@
 
 export type ImageKind = 'schematic' | 'circuit' | 'wiring' | 'photo';
 
+/**
+ * 项目难度：
+ * - shikai「始解」：搭起来就行，不用写代码（原有功能就是始解的默认功能，不改动）
+ * - bankai「卍解」：要写代码 / 程序，项目里多出「程序代码」等更细的功能
+ */
+export type ProjectDifficulty = 'shikai' | 'bankai';
+
+export const DIFFICULTY_LABEL: Record<ProjectDifficulty, { name: string; hint: string; short: string }> = {
+  shikai: { name: '始解', hint: '搭起来就行，不用写代码', short: '不用写代码' },
+  bankai: { name: '卍解', hint: '要写代码 / 程序，项目里能放代码文件', short: '要写代码' },
+};
+
+/** 卍解项目里的一段程序代码 */
+export interface ToolboxCodeFile {
+  id: string;
+  projectId: string;
+  /** 文件名，例如 blink.ino */
+  name: string;
+  /** 语言标记（ino / py / cpp…），用来说明和显示 */
+  language: string;
+  /** 代码正文 */
+  content: string;
+  /** 这段代码是干嘛的（可选） */
+  note: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
 /** 项目（作品） */
 export interface ToolboxProject {
   id: string;
@@ -15,6 +43,10 @@ export interface ToolboxProject {
   features: string;
   /** 来源信息：自己新建 / 来自模板 / 来自收到的作品文件 */
   source: ProjectSource;
+  /** 难度：始解 / 卍解；老的作品没有这个字段，一律当始解 */
+  difficulty?: ProjectDifficulty;
+  /** 卍解项目：开发环境 / 要用到的库 */
+  codeNote?: string;
   views: number;
   /** 本地统计：被「做同款」的次数 */
   remixCount: number;
@@ -102,6 +134,10 @@ export interface ProjectSummary {
   name: string;
   notes: string;
   source: ProjectSource;
+  /** 难度：始解 / 卍解（没存过的一律当始解） */
+  difficulty?: ProjectDifficulty;
+  /** 卍解项目的代码文件数 */
+  codeCount?: number;
   componentCount: number;
   imageCount: number;
   coverImageId: string | null;
@@ -115,6 +151,8 @@ export interface ProjectBundle {
   components: ToolboxComponent[];
   sections: ToolboxSection[];
   images: ToolboxImage[];
+  /** 程序代码（只有卍解项目会有） */
+  codeFiles?: ToolboxCodeFile[];
 }
 
 /** 一次性导入用的完整数据（id 由存储层生成） */
@@ -123,6 +161,7 @@ export interface ImportedBundle {
   components: Array<Omit<ToolboxComponent, 'id' | 'projectId'>>;
   sections: Array<Omit<ToolboxSection, 'id' | 'projectId'>>;
   images: Array<Omit<ToolboxImage, 'id' | 'projectId'>>;
+  codeFiles?: Array<Omit<ToolboxCodeFile, 'id' | 'projectId'>>;
 }
 
 /** 详情页展示用的统计 */
@@ -222,7 +261,7 @@ export interface ToolboxStore {
 
   listProjects(): Promise<ProjectSummary[]>;
   getProject(id: string): Promise<ProjectBundle | null>;
-  createProject(input: { name: string; notes?: string; source?: ProjectSource }): Promise<string>;
+  createProject(input: { name: string; notes?: string; source?: ProjectSource; difficulty?: ProjectDifficulty }): Promise<string>;
   updateProject(
     id: string,
     patch: Partial<Pick<ToolboxProject, 'name' | 'notes' | 'description' | 'features' | 'views' | 'remixCount' | 'source'>>
@@ -246,6 +285,13 @@ export interface ToolboxStore {
   /** 取出可显示的图片地址（内部缓存 objectURL，记得在组件卸载时释放） */
   imageUrl(imageId: string | null | undefined): Promise<string | null>;
   releaseImageUrls(): void;
+
+  // ===== 程序代码（卍解项目）=====
+  /** 这个项目里的代码文件，按顺序 */
+  listCodeFiles(projectId: string): Promise<ToolboxCodeFile[]>;
+  addCodeFile(projectId: string, input: { name: string; language?: string; content: string; note?: string }): Promise<string>;
+  updateCodeFile(id: string, patch: Partial<ToolboxCodeFile>): Promise<void>;
+  removeCodeFile(id: string): Promise<void>;
 
   stats(projectId: string): Promise<LocalStats>;
 

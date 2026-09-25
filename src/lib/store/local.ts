@@ -15,8 +15,10 @@ import type {
   LibraryComponentInput,
   LocalStats,
   ProjectBundle,
+  ProjectDifficulty,
   ProjectSource,
   ProjectSummary,
+  ToolboxCodeFile,
   ToolboxComponent,
   ToolboxImage,
   ToolboxProject,
@@ -30,6 +32,19 @@ const DB_NAME = 'circuitorium-toolbox';
 /** 示例作品是否已写入过（只写一次，用户删掉后不会再自动回来） */
 const SAMPLE_FLAG = '__samples_seeded';
 
+/** 代码文件的体积上限：单个 200KB、一个项目 20 个（够放课堂作业了） */
+export const CODE_LIMITS = { maxChars: 200_000, maxFiles: 20 };
+
+/** 按扩展名猜语言标记（只用来显示，不影响内容） */
+function guessLanguage(name: string): string {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  const map: Record<string, string> = {
+    ino: 'Arduino', pde: 'Arduino', py: 'Python', c: 'C', h: 'C 头文件', cpp: 'C++', hpp: 'C++ 头文件',
+    js: 'JavaScript', ts: 'TypeScript', json: '配置', txt: '文本', md: '说明', sh: 'Shell', mix: 'Mixly',
+  };
+  return map[ext] || (ext ? ext.toUpperCase() : '文本');
+}
+
 /** 用户库里的元件：图片存二进制，其余字段与 LibraryComponent 一致 */
 type StoredLibraryComponent = Omit<LibraryComponent, 'image' | 'imageUrl'> & { image?: Blob | null };
 
@@ -42,6 +57,8 @@ class ToolboxDB extends Dexie {
   settings!: Table<ToolboxSetting, string>;
   /** 用户自己的元件库（内置库不在这里，是打包在软件里的只读数据） */
   library!: Table<StoredLibraryComponent, string>;
+  /** 卍解项目的程序代码 */
+  codeFiles!: Table<ToolboxCodeFile, string>;
 
   constructor() {
     super(DB_NAME);
@@ -56,6 +73,10 @@ class ToolboxDB extends Dexie {
     // v2：加元件库（用户自建 / AI 临时 / 从作品导入）
     this.version(2).stores({
       library: 'id, source, category, name, createdAt',
+    });
+    // v3：加卍解项目的程序代码（只是新增一张表，老数据不动）
+    this.version(3).stores({
+      codeFiles: 'id, projectId, sortOrder',
     });
   }
 }
@@ -155,11 +176,17 @@ class LocalToolboxStore implements ToolboxStore {
     for (const p of projects) {
       const components = await database.components.where('projectId').equals(p.id).toArray();
       const images = await database.images.where('projectId').equals(p.id).toArray();
+      const difficulty: ProjectDifficulty = p.difficulty === 'bankai' ? 'bankai' : 'shikai';
+      const codeCount = difficulty === 'bankai'
+        ? await database.codeFiles.where('projectId').equals(p.id).count()
+        : 0;
       summaries.push({
         id: p.id,
         name: p.name,
         notes: p.notes,
         source: p.source ?? emptySource(),
+        difficulty,
+        codeCount,
         componentCount: components.length,
         imageCount: images.length,
         coverImageId: images.length > 0 ? images[images.length - 1].id : null,
@@ -176,10 +203,11 @@ class LocalToolboxStore implements ToolboxStore {
     const project = await database.projects.get(id);
     if (!project) return null;
 
-    const [components, sections, images] = await Promise.all([
+    const [components, sections, images, codeFiles] = await Promise.all([
       database.components.where('projectId').equals(id).toArray(),
       database.sections.where('projectId').equals(id).toArray(),
       database.images.where('projectId').equals(id).toArray(),
+      database.codeFiles.where('projectId').equals(id).toArray(),
     ]);
 
     return {
@@ -187,10 +215,11 @@ class LocalToolboxStore implements ToolboxStore {
       components: components.sort((a, b) => a.sortOrder - b.sortOrder),
       sections: sections.sort((a, b) => a.sortOrder - b.sortOrder),
       images: images.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
+      codeFiles: codeFiles.sort((a, b) => a.sortOrder - b.sortOrder),
     };
   }
 
-  async createProject(input: { name: string; notes?: string; source?: ProjectSource }): Promise<string> {
+  async createProject(input: { name: string; notes?: string; source?: ProjectSource; difficulty?: ProjectDifficulty }): Promise<string> {
     await this.ready();
     const id = newId('prj');
     const ts = nowIso();
@@ -201,12 +230,54 @@ class LocalToolboxStore implements ToolboxStore {
       description: '',
       features: '',
       source: input.source ?? emptySource(),
+      difficulty: input.difficulty ?? 'shikai',
       views: 0,
       remixCount: 0,
       createdAt: ts,
       updatedAt: ts,
     });
     return id;
+  }
+
+  // ===== 程序代码（卍解项目）=====
+  async listCodeFiles(projectId: string): Promise<ToolboxCodeFile[]> {
+    await this.ready();
+    const list = await db().codeFiles.where('projectId').equals(projectId).toArray();
+    return list.sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  async addCodeFile(projectId: string, input: { name: string; language?: string; content: string; note?: string }): Promise<string> {
+    await this.ready();
+    const database = db();
+    const existing = await database.codeFiles.where('projectId').equals(projectId).toArray();
+    const id = newId('code');
+    await database.codeFiles.add({
+      id,
+      projectId,
+      name: input.name.trim() || `代码${existing.length + 1}.txt`,
+      language: (input.language || guessLanguage(input.name)).trim(),
+      content: input.content.slice(0, CODE_LIMITS.maxChars),
+      note: (input.note || '').slice(0, 200),
+      sortOrder: existing.length,
+      createdAt: nowIso(),
+    });
+    await database.projects.update(projectId, { updatedAt: nowIso() });
+    return id;
+  }
+
+  async updateCodeFile(id: string, patch: Partial<ToolboxCodeFile>): Promise<void> {
+    await this.ready();
+    const clean = { ...patch } as Record<string, unknown>;
+    delete clean.id;
+    delete clean.projectId;
+    delete clean.createdAt;
+    if (typeof clean.content === 'string') clean.content = (clean.content as string).slice(0, CODE_LIMITS.maxChars);
+    await db().codeFiles.update(id, clean as Partial<ToolboxCodeFile>);
+  }
+
+  async removeCodeFile(id: string): Promise<void> {
+    await this.ready();
+    await db().codeFiles.delete(id);
   }
 
   async updateProject(id: string, patch: Partial<ToolboxProject>): Promise<void> {
@@ -247,7 +318,7 @@ class LocalToolboxStore implements ToolboxStore {
         ? { type: 'template' as const, ref: origin.ref }
         : { type: 'manual' as const, ref: origin?.ref };
 
-    await database.transaction('rw', database.projects, database.components, database.sections, database.images, async () => {
+    await database.transaction('rw', database.projects, database.components, database.sections, database.images, database.codeFiles, async () => {
       await database.projects.add({
         ...bundle.project,
         id: newProjectId,
@@ -274,6 +345,12 @@ class LocalToolboxStore implements ToolboxStore {
         delete rest.id;
         await database.images.add({ ...(rest as typeof img), id: newId('img'), projectId: newProjectId, createdAt: ts });
       }
+      // 「做同款」也把程序代码带上
+      for (const code of bundle.codeFiles || []) {
+        const rest: Partial<typeof code> = { ...code };
+        delete rest.id;
+        await database.codeFiles.add({ ...(rest as typeof code), id: newId('code'), projectId: newProjectId, createdAt: ts });
+      }
 
       await database.projects.update(id, { remixCount: (bundle.project.remixCount || 0) + 1 });
     });
@@ -287,7 +364,7 @@ class LocalToolboxStore implements ToolboxStore {
     const database = db();
     const projectId = newId('prj');
 
-    await database.transaction('rw', database.projects, database.components, database.sections, database.images, async () => {
+    await database.transaction('rw', database.projects, database.components, database.sections, database.images, database.codeFiles, async () => {
       await database.projects.add({ ...bundle.project, id: projectId });
 
       for (const c of bundle.components) {
@@ -298,6 +375,10 @@ class LocalToolboxStore implements ToolboxStore {
       }
       for (const img of bundle.images) {
         await database.images.add({ ...img, id: newId('img'), projectId });
+      }
+      // 卍解作品带过来的程序代码
+      for (const code of bundle.codeFiles || []) {
+        await database.codeFiles.add({ ...code, id: newId('code'), projectId });
       }
     });
 

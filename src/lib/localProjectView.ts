@@ -1,7 +1,7 @@
 // 本地工具箱数据 → 「项目详情页」所需的结构
 // 目的：让同一个详情页组件既能读服务器数据，也能读本机数据（界面完全一致）
 
-import { getStore, type ComponentInput, type ImageKind } from '@/lib/store';
+import { getStore, type ComponentInput, type ImageKind, type ProjectDifficulty } from '@/lib/store';
 
 export interface LocalViewProject {
   id: string;
@@ -9,6 +9,10 @@ export interface LocalViewProject {
   notes: string;
   description: string;
   features: string;
+  /** 难度：始解 / 卍解 */
+  difficulty: ProjectDifficulty;
+  /** 卍解项目的开发环境说明 */
+  code_note: string;
   is_shared: number;
   share_token: string | null;
   share_count: number;
@@ -85,6 +89,7 @@ export async function loadLocalProjectView(projectId: string): Promise<LocalView
   ]);
 
   const steps = bundle.sections.filter((s) => s.type === 'step');
+  const difficulty: ProjectDifficulty = bundle.project.difficulty === 'bankai' ? 'bankai' : 'shikai';
 
   return {
     project: {
@@ -93,6 +98,8 @@ export async function loadLocalProjectView(projectId: string): Promise<LocalView
       notes: bundle.project.notes,
       description: bundle.project.description,
       features: bundle.project.features,
+      difficulty,
+      code_note: bundle.project.codeNote || '',
       is_shared: 0,
       share_token: null,
       share_count: 0,
