@@ -6,6 +6,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { getStore } from '@/lib/store';
 import { LIBRARY_CATEGORIES } from '@/lib/library/builtin';
+import ComponentEditorModal from '@/components/ComponentEditorModal';
 import type { LibraryComponent, LibrarySource } from '@/lib/store/types';
 
 interface Props {
@@ -28,6 +29,10 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
   const [keyword, setKeyword] = useState('');
   const [openId, setOpenId] = useState<string | null>(null);
   const [error, setError] = useState('');
+  const [editorFor, setEditorFor] = useState<LibraryComponent | null>(null);
+  const [editorCopy, setEditorCopy] = useState<LibraryComponent | null>(null);
+  const [editorOpen, setEditorOpen] = useState(false);
+  const [toast, setToast] = useState('');
 
   const load = useCallback(async () => {
     try {
@@ -87,6 +92,12 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="找元件：电阻 / 1N4001 / 三极管…"
           />
+          <button
+            className="lib-add"
+            onClick={() => { setEditorFor(null); setEditorCopy(null); setEditorOpen(true); }}
+          >
+            ＋ 自己加一个
+          </button>
         </div>
       </header>
 
@@ -138,6 +149,22 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
       <p className="lib-credit">
         <button type="button" className="lib-credit-link" onClick={onCredits}>关于 · 鸣谢</button>
       </p>
+
+      {toast && <div className="lib-toast">{toast}</div>}
+
+      {editorOpen && (
+        <ComponentEditorModal
+          editing={editorFor}
+          copyFrom={editorCopy}
+          onSaved={(id, isNew) => {
+            setEditorOpen(false);
+            setToast(isNew ? '已经加进你的元件库' : '资料已更新');
+            void load();
+            setOpenId(id);
+          }}
+          onClose={() => setEditorOpen(false)}
+        />
+      )}
 
       {current && (
         <div className="lib-detail-overlay" onClick={() => setOpenId(null)}>
@@ -197,6 +224,37 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
               <span className={(SOURCE_LABEL[current.source] || SOURCE_LABEL.builtin).cls}>
                 {(SOURCE_LABEL[current.source] || SOURCE_LABEL.builtin).text}
               </span>
+              <div className="lib-detail-actions">
+                {current.source === 'builtin' ? (
+                  <button
+                    className="lib-act"
+                    onClick={() => { setEditorCopy(current); setEditorFor(null); setEditorOpen(true); setOpenId(null); }}
+                  >
+                    照着改一个
+                  </button>
+                ) : (
+                  <>
+                    <button
+                      className="lib-act"
+                      onClick={() => { setEditorFor(current); setEditorCopy(null); setEditorOpen(true); setOpenId(null); }}
+                    >
+                      补充 / 修改资料
+                    </button>
+                    <button
+                      className="lib-act lib-act-danger"
+                      onClick={async () => {
+                        if (!confirm(`把「${current.name}」从你的元件库里删掉？`)) return;
+                        await getStore().removeLibraryComponent(current.id);
+                        setOpenId(null);
+                        setToast(`已删掉「${current.name}」`);
+                        void load();
+                      }}
+                    >
+                      删除
+                    </button>
+                  </>
+                )}
+              </div>
             </footer>
           </div>
         </div>
@@ -214,6 +272,12 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
         .lib-sub { margin: 0; font-size: 13px; color: rgba(255,255,255,0.45); }
         .lib-search { width: min(320px, 70vw); padding: 10px 13px; border-radius: 10px; font-size: 13.5px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); color: #fff; outline: none; }
         .lib-search:focus { border-color: rgba(102,126,234,0.55); }
+        .lib-tools { display: flex; gap: 10px; align-items: center; }
+        .lib-add { padding: 10px 16px; border-radius: 10px; font-size: 13px; font-weight: 600; cursor: pointer; border: 1px solid transparent; background: linear-gradient(135deg, #667eea 0%, #7c5cf0 100%); color: #fff; white-space: nowrap; }
+        .lib-detail-actions { margin-left: auto; display: flex; gap: 8px; }
+        .lib-act { padding: 7px 13px; border-radius: 9px; font-size: 12.5px; font-weight: 600; cursor: pointer; background: rgba(79,124,255,0.14); border: 1px solid rgba(79,124,255,0.32); color: #bcd0ff; }
+        .lib-act-danger { background: rgba(239,68,68,0.1); border-color: rgba(239,68,68,0.3); color: #fca5a5; }
+        .lib-toast { position: fixed; left: 50%; bottom: 28px; transform: translateX(-50%); z-index: 470; padding: 10px 16px; border-radius: 10px; background: rgba(13,22,38,0.95); border: 1px solid rgba(120,150,255,0.25); color: #dbe4ff; font-size: 13px; box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .lib-chips { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px; }
         .lib-chip { padding: 6px 14px; border-radius: 999px; font-size: 12.5px; font-weight: 600; cursor: pointer; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.65); }
         .lib-chip:hover { color: #fff; border-color: rgba(120,150,255,0.4); }

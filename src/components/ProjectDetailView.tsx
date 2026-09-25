@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import SiteHeader from '@/components/SiteHeader';
 import QRCodeBox from '@/components/QRCodeBox';
+import LibraryPicker from '@/components/LibraryPicker';
 import { getToken, authHeaders, copyText } from '@/lib/client';
 import { bgGradient, gridBg } from '@/styles/theme';
 import {
@@ -262,7 +263,10 @@ export default function ProjectDetailView({
   const [annotationText, setAnnotationText] = useState('');
   // 本地模式：手动添加元件
   const [addingComponent, setAddingComponent] = useState(false);
-  const [newComp, setNewComp] = useState({ name: '', type: '', model: '', quantity: 1 });
+  const [newComp, setNewComp] = useState<{ name: string; type: string; model: string; quantity: number; libraryId?: string }>(
+    { name: '', type: '', model: '', quantity: 1 }
+  );
+  const [pickingFromLibrary, setPickingFromLibrary] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // 交互
@@ -499,6 +503,8 @@ export default function ProjectDetailView({
       type: newComp.type.trim(),
       model: newComp.model.trim(),
       quantity: Math.max(1, newComp.quantity || 1),
+      // 从元件库挑的：记下编号，导出作品时会带上这个元件的快照
+      ...(newComp.libraryId ? { libraryId: newComp.libraryId } : {}),
     });
     await loadProject();
     setNewComp({ name: '', type: '', model: '', quantity: 1 });
@@ -1236,10 +1242,16 @@ export default function ProjectDetailView({
           >
             {isLocal && addingComponent && (
               <div className="pj-edit-cell" style={{ marginBottom: '14px' }}>
+                <div className="pj-edit-row" style={{ marginBottom: '10px' }}>
+                  <button className="pj-btn pj-btn-soft" onClick={() => setPickingFromLibrary(true)}>从元件库选</button>
+                  <span className="pj-dim" style={{ fontSize: '12px' }}>
+                    {newComp.libraryId ? `已选自元件库（${newComp.libraryId}）` : '也可以直接手写下面的字段'}
+                  </span>
+                </div>
                 <div className="pj-edit-grid">
                   <input
                     value={newComp.name}
-                    onChange={(e) => setNewComp({ ...newComp, name: e.target.value })}
+                    onChange={(e) => setNewComp({ ...newComp, name: e.target.value, libraryId: undefined })}
                     placeholder="元器件名称（必填），例如：LED 发光二极管"
                     style={{ ...edInputStyle, gridColumn: '1 / -1' }}
                   />
@@ -1265,7 +1277,7 @@ export default function ProjectDetailView({
                 </div>
                 <div className="pj-edit-row">
                   <button className="pj-btn pj-btn-primary" onClick={handleAddComponent} disabled={saving}>加入作品</button>
-                  <button className="pj-btn pj-btn-ghost" onClick={() => setAddingComponent(false)}>取消</button>
+                  <button className="pj-btn pj-btn-ghost" onClick={() => { setAddingComponent(false); setNewComp({ name: '', type: '', model: '', quantity: 1 }); }}>取消</button>
                 </div>
               </div>
             )}
@@ -1643,6 +1655,22 @@ export default function ProjectDetailView({
             </div>
           </div>
         </div>
+      )}
+
+      {pickingFromLibrary && (
+        <LibraryPicker
+          onClose={() => setPickingFromLibrary(false)}
+          onPick={(item) => {
+            setNewComp({
+              name: item.name,
+              type: item.category,
+              model: (item.commonModels && item.commonModels[0]) || item.package || '',
+              quantity: 1,
+              libraryId: item.id,
+            });
+            setPickingFromLibrary(false);
+          }}
+        />
       )}
 
       {toast && <div className="pj-toast">{toast}</div>}
