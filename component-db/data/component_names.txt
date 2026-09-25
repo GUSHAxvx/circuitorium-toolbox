@@ -1,35 +1,48 @@
-# 30 个核心元件清单（面向初学者的第一批）
-# 状态：[x] 已完成  [ ] 待做（下一步扩到 30 个）
+# 核心元件清单与进度
+# 状态：[x] 已完成（有图、有技术参数、有教学文案）  [ ] 待做
 # 格式：状态 id | 中文名 | 备注（Fritzing 里的路径等）
 
-[x] resistor            | 电阻           | core/resistor.fzp
-[x] led                 | 发光二极管     | core/LED-generic-5mm_6852162_005.fzp
-[x] capacitor-ceramic   | 陶瓷电容       | core/capacitor_ceramic_100mil.fzp
-[x] transistor-npn      | 三极管（NPN）  | core/transistor_signal_NPN_TO92_EBC.fzp
-[x] diode               | 二极管         | core/diode_1N4001_300mil.fzp
+## 第一批（5 个，最早的验证）
+[x] resistor              | 电阻            | core/resistor.fzp
+[x] led                   | 发光二极管      | core/LED-generic-5mm_6852162_005.fzp
+[x] capacitor-ceramic     | 陶瓷电容        | core/capacitor_ceramic_100mil.fzp
+[x] transistor-npn        | 三极管（NPN）   | core/transistor_signal_NPN_TO92_EBC.fzp
+[x] diode                 | 二极管          | core/diode_1N4001_300mil.fzp（面包板图换成实物风格）
 
-[ ] capacitor-electrolytic | 电解电容    | 有正负极，跟陶瓷电容对着讲
-[ ] battery             | 电池           |
-[ ] battery-holder      | 电池盒         |
-[ ] switch-slide        | 拨动开关       |
-[ ] button-tactile      | 按键           |
-[ ] breadboard          | 面包板         |
-[ ] jumper-wire         | 杜邦线         |
-[ ] wire-solid          | 导线           |
-[ ] buzzer              | 蜂鸣器         |
-[ ] photoresistor       | 光敏电阻       |
-[ ] thermistor          | 热敏电阻       |
-[ ] potentiometer       | 电位器         |
-[ ] relay               | 继电器         |
-[ ] fuse                | 保险丝         |
-[ ] seven-segment       | 数码管         |
-[ ] lcd1602             | LCD1602 屏     |
-[ ] oled-ssd1306        | OLED 屏        |
-[ ] servo               | 舵机           |
-[ ] motor-dc            | 直流电机       |
-[ ] ultrasonic-hcsr04   | 超声波模块     |
-[ ] dht11               | 温湿度传感器   |
-[ ] ir-receiver         | 红外接收头     |
-[ ] voltage-regulator   | 稳压模块       |
-[ ] arduino-uno         | Arduino Uno    |
-[ ] esp32               | ESP32          |
+## 第二批（15 个，2026-09 扩充）
+[x] capacitor-electrolytic | 电解电容       | core/capacitor_electrolytic_small.fzp
+[x] breadboard            | 面包板          | core/breadboard.fzp
+[x] battery-9v            | 9V 电池         | core/Battery block 9V.fzp
+[x] pushbutton            | 按键            | core/Pushbutton.fzp
+[x] potentiometer         | 电位器          | core/potentiometer_rotary_16mm_5.fzp
+[x] photoresistor         | 光敏电阻        | core/LDR_photocell_300mil_v5.fzp
+[x] thermistor            | 热敏电阻        | core/thermistor_300mil.fzp
+[x] buzzer                | 蜂鸣器          | core/Buzzer-v15.fzp
+[x] ultrasonic            | 超声波模块      | core/hc-sr04_bf8299a_002.fzp
+[x] ir-receiver           | 红外接收头      | core/IR_Receiver_v14.fzp
+[x] voltage-regulator     | 稳压块 7805     | core/voltage_regulator_7805.fzp
+[x] arduino-uno           | Arduino Uno     | core/arduino_Uno_Rev3(fix).fzp
+[x] seven-segment         | 数码管          | core/7-segment_display.fzp
+[x] lcd-1602              | LCD1602 液晶屏  | core/lcd-GDM1602K.fzp
+[x] relay                 | 继电器          | core/DIP_Relay_D31A_14fadb0_002.fzp
+
+当前合计：20 个（图片合计 85.7 KB，最大一张 11.2 KB）
+
+## 还想加的（Fritzing core 里暂时没找到合适素材）
+[ ] esp32                 | ESP32           | core 里没有，需要从别处找或自己画
+[ ] servo-9g              | 舵机            | 只有 Dagu DGServo 的多视图版本，图不理想
+[ ] motor-dc              | 直流电机        | 只有电机驱动板，没有裸电机
+[ ] oled-ssd1306          | OLED 屏         | 只有 Grove OLED（接口不同）与 WeMos 扩展板
+[ ] tactile-6x6           | 轻触按键 6×6    | 现在用圆形按钮代替
+[ ] slide-switch          | 拨动开关        | core 里只有 LilyPad 版与滑块电位器
+[ ] jumper-wire           | 杜邦线          | core 里只有 SMD 跳线（贴片），不合适
+[ ] battery-holder-aa     | AA 电池盒       | 有 4×AAA 电池座，形态与常见电池盒差别大
+[ ] fuse                  | 保险丝          | 只有「带手柄的保险丝」，形态偏工业
+[ ] dc-jack               | DC 电源插口     | 待找
+
+补一个元件的流程（每个约 5 分钟）：
+1. 在 D:\fritzing-parts 的 filelist.txt 里找 `core/xxx.fzp`
+2. 加进 scripts/parts.json
+3. `python scripts/extract_fritzing.py` → `node scripts/render_images.mjs`
+4. 在 data/components_text.json 里补一条教学文案
+5. `python scripts/merge_validate.py --strict` → `npm run sync:library`

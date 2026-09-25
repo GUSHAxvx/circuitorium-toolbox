@@ -5,9 +5,21 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { getStore } from '@/lib/store';
+import { compressImage } from '@/lib/images';
 import { isAiReady, loadAiConfig, type AiConfig } from '@/lib/ai/config';
-import { AiError, recognizeImage } from '@/lib/ai/recognize';
+import { AiError, recognizeImage, type RecognizedComponent } from '@/lib/ai/recognize';
 import AiSettingsModal from '@/components/AiSettingsModal';
+
+/** 识别结果没有分类，按"类型"猜一个元件库分类 */
+function guessCategory(type: string): string {
+  const t = (type || '').toLowerCase();
+  if (/传感|sensor|温湿|光敏|热敏|超声|红外/.test(t)) return '传感器';
+  if (/电源|电池|battery|稳压|供电/.test(t)) return '电源';
+  if (/开关|按键|按钮|switch|button/.test(t)) return '开关';
+  if (/电机|舵机|马达|motor|servo|喇叭|蜂鸣|led|灯|显示|lcd|oled/.test(t)) return '输出';
+  if (/模块|module|开发板|arduino|esp/.test(t)) return '模块';
+  return '基础元件';
+}
 
 interface Props {
   projectId: string;
@@ -24,6 +36,9 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
   const [busy, setBusy] = useState(false);
   const [msg, setMsg] = useState('');
   const [found, setFound] = useState<{ name: string; type: string; confidence: number }[]>([]);
+  /** 识别出来的完整结果 + 写进作品的元件行 id，用于「存进我的元件库」 */
+  const [savedRows, setSavedRows] = useState<{ componentId: string; item: RecognizedComponent }[]>([]);
+  const [savingToLibrary, setSavingToLibrary] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -44,6 +59,7 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
     setPreview(URL.createObjectURL(f));
     setMsg('');
     setFound([]);
+    setSavedRows([]);
   };
 
   const handleRecognize = async () => {
@@ -53,8 +69,9 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
     try {
       const { components: list } = await recognizeImage(config, file);
       const store = getStore();
+      const rows: { componentId: string; item: RecognizedComponent }[] = [];
       for (const c of list) {
-        await store.addComponent(projectId, {
+        const componentId = await store.addComponent(projectId, {
           name: c.name,
           type: c.type,
           model: c.model,
@@ -65,7 +82,9 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
           description: c.description,
           confidence: c.confidence,
         });
+        rows.push({ componentId, item: c });
       }
+      setSavedRows(rows);
       setFound(list.map((c) => ({ name: c.name, type: c.type || '', confidence: c.confidence || 0 })));
       setMsg(`认完了，已加入 ${list.length} 个元件`);
       onAdded?.(list.length);
@@ -73,6 +92,58 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
       setMsg(err instanceof AiError ? err.message : '识别失败，请稍后重试');
     } finally {
       setBusy(false);
+    }
+  };
+
+  /**
+   * 把这次认出来的元件存进本机元件库（source: ai_temp）。
+   * 顺手给作品里那几行补上 libraryId —— 这样它们以后也会跟着作品传给别人。
+   */
+  const handleSaveToLibrary = async () => {
+    if (savedRows.length === 0) return;
+    setSavingToLibrary(true);
+    setMsg('');
+    try {
+      const store = getStore();
+      // 用这张照片当元件图（压一下再存）
+      let image: Blob | null = null;
+      if (file) {
+        try {
+          image = (await compressImage(file)).blob;
+        } catch {
+          image = null;
+        }
+      }
+      let saved = 0;
+      for (const { componentId, item } of savedRows) {
+        try {
+          const id = await store.saveLibraryComponent({
+            name: item.name,
+            category: guessCategory(item.type),
+            purpose: item.description || `${item.name}（AI 识别，还没写说明）`,
+            appearance: [item.packageType, item.pinCount ? `${item.pinCount} 脚` : ''].filter(Boolean).join(' · '),
+            polarity: '',
+            howToRead: item.specifications || '',
+            commonModels: item.model ? [item.model] : [],
+            pinCount: item.pinCount || 0,
+            package: item.packageType || '',
+            family: item.type || '',
+            image,
+            source: 'ai_temp',
+            verified: false,
+            author: 'AI 识别',
+          });
+          await store.updateComponent(componentId, { libraryId: id });
+          saved += 1;
+        } catch {
+          // 单个失败不影响其它
+        }
+      }
+      setMsg(saved > 0
+        ? `已把 ${saved} 个元件存进你的元件库（以后能做同款、也能跟着作品传给别人）`
+        : '没能存进元件库，稍后再试');
+    } finally {
+      setSavingToLibrary(false);
     }
   };
 
@@ -138,6 +209,12 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
                     </li>
                   ))}
                 </ul>
+                <div className="lr-row" style={{ marginTop: '12px' }}>
+                  <button className="lr-btn lr-btn-soft" onClick={handleSaveToLibrary} disabled={savingToLibrary}>
+                    {savingToLibrary ? '正在存…' : '存进我的元件库'}
+                  </button>
+                  <span className="lr-hint">存了以后能重复用，也能跟着作品传给别人；不存也不影响这件作品</span>
+                </div>
               </section>
             )}
           </>
@@ -166,7 +243,8 @@ export default function LocalAiRecognize({ projectId, onClose, onAdded }: Props)
           .lr-card { background: rgba(255,255,255,0.025); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 14px; margin-bottom: 12px; }
           .lr-card h3 { margin: 0 0 6px; font-size: 13.5px; font-weight: 700; color: #fff; }
           .lr-card p { margin: 0; font-size: 12.5px; line-height: 1.7; color: rgba(255,255,255,0.5); }
-          .lr-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; }
+          .lr-row { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 12px; align-items: center; }
+          .lr-hint { font-size: 11.5px; color: rgba(255,255,255,0.4); }
           .lr-btn { border: 1px solid rgba(255,255,255,0.14); background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.85); border-radius: 9px; padding: 9px 16px; font-size: 13px; font-weight: 600; cursor: pointer; }
           .lr-btn:disabled { opacity: 0.45; cursor: default; }
           .lr-btn-primary { background: linear-gradient(135deg, #667eea 0%, #7c5cf0 100%); border-color: transparent; color: #fff; }

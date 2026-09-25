@@ -1,5 +1,5 @@
 {
-  "_comment": "要提取的元件清单：id 是我们自己的短名，fzp 是 Fritzing 仓库里的路径。先跑通 5 个，确认效果后再扩到 30 个。",
+  "_comment": "要提取的元件清单：id 是我们自己的短名，fzp 是 Fritzing 仓库里的路径。",
   "_svgOverride_comment": "可选：svgOverride 用来换掉某个视图的图。1N4001 官方给的面包板图是电路符号，初学者要认的是实物，所以换成同族整流二极管的实物图；技术参数仍以 fzp 为准。",
   "parts": [
     { "id": "resistor", "fzp": "core/resistor.fzp" },
@@ -10,6 +10,22 @@
       "id": "diode",
       "fzp": "core/diode_1N4001_300mil.fzp",
       "svgOverride": { "breadboard": "svg/core/breadboard/P1000K_diode.svg" }
-    }
+    },
+
+    { "id": "capacitor-electrolytic", "fzp": "core/capacitor_electrolytic_small.fzp" },
+    { "id": "breadboard", "fzp": "core/breadboard.fzp" },
+    { "id": "battery-9v", "fzp": "core/Battery block 9V.fzp" },
+    { "id": "pushbutton", "fzp": "core/Pushbutton.fzp" },
+    { "id": "potentiometer", "fzp": "core/potentiometer_rotary_16mm_5.fzp" },
+    { "id": "photoresistor", "fzp": "core/LDR_photocell_300mil_v5.fzp" },
+    { "id": "thermistor", "fzp": "core/thermistor_300mil.fzp" },
+    { "id": "buzzer", "fzp": "core/Buzzer-v15.fzp" },
+    { "id": "ultrasonic", "fzp": "core/hc-sr04_bf8299a_002.fzp" },
+    { "id": "ir-receiver", "fzp": "core/IR_Receiver_v14.fzp" },
+    { "id": "voltage-regulator", "fzp": "core/voltage_regulator_7805.fzp" },
+    { "id": "arduino-uno", "fzp": "core/arduino_Uno_Rev3(fix).fzp" },
+    { "id": "seven-segment", "fzp": "core/7-segment_display.fzp" },
+    { "id": "lcd-1602", "fzp": "core/lcd-GDM1602K.fzp" },
+    { "id": "relay", "fzp": "core/DIP_Relay_D31A_14fadb0_002.fzp" }
   ]
 }
