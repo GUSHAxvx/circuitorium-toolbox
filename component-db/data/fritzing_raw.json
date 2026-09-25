@@ -1,0 +1,241 @@
+{
+  "generatedAt": "2026-09-25T05:23:27+00:00",
+  "source": {
+    "repo": "https://github.com/fritzing/fritzing-parts",
+    "commit": "27535f2fd02097be9bed229b75aa8e9be282a4a0",
+    "license": "CC BY-SA 3.0（图形）",
+    "note": "图形来自 Fritzing 元件库，使用时需署名并以相同方式共享"
+  },
+  "parts": [
+    {
+      "moduleId": "ResistorModuleID",
+      "fritzingVersion": "0.1.1201",
+      "title": "220 Ω Resistor",
+      "description": "A generic resistor (0.25W)",
+      "label": "R",
+      "properties": {
+        "Resistance": "220",
+        "family": "Resistor",
+        "power": "0.25W",
+        "Pin Spacing": "400 mil",
+        "package": "THT",
+        "bands": "4",
+        "tolerance": "±5%"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "Pin 0",
+          "type": "male",
+          "description": "Pin0",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "Pin 1",
+          "type": "male",
+          "description": "Pin 1",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 2,
+      "images": {
+        "icon": "icon/resistor_icon_220.svg",
+        "breadboard": "breadboard/resistor_220.svg",
+        "schematic": "schematic/resistor.svg",
+        "pcb": "pcb/axial_lay_2_400mil_pcb.svg"
+      },
+      "id": "resistor",
+      "fzpPath": "core/resistor.fzp",
+      "svgFiles": {
+        "icon": "svg_raw/resistor/resistor_icon_220.svg",
+        "breadboard": "svg_raw/resistor/resistor_220.svg",
+        "schematic": "svg_raw/resistor/resistor.svg",
+        "pcb": "svg_raw/resistor/axial_lay_2_400mil_pcb.svg"
+      }
+    },
+    {
+      "moduleId": "LED-genedb611bf8177f41ac9c325217070f0c62ColorLEDModuleID",
+      "fritzingVersion": "1.0.6",
+      "title": "Red LED - 5mm",
+      "description": "A generic red LED (~1.8V)",
+      "label": "LED",
+      "properties": {
+        "package": "5 mm [THT]",
+        "family": "LED",
+        "color": "Red (633nm)",
+        "current": "0.030A",
+        "leg": "yes"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "cathode",
+          "type": "male",
+          "description": "cathode pin",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "anode",
+          "type": "male",
+          "description": "anode pin",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 2,
+      "images": {
+        "icon": "icon/LED-red-5mmicon.svg",
+        "breadboard": "breadboard/LED-5mm-red-leg.svg",
+        "schematic": "schematic/led.svg",
+        "pcb": "pcb/LED-generic-5mm_6852162_005.svg"
+      },
+      "id": "led",
+      "fzpPath": "core/LED-generic-5mm_6852162_005.fzp",
+      "svgFiles": {
+        "icon": "svg_raw/led/LED-red-5mmicon.svg",
+        "breadboard": "svg_raw/led/LED-5mm-red-leg.svg",
+        "schematic": "svg_raw/led/led.svg",
+        "pcb": "svg_raw/led/LED-generic-5mm_6852162_005.svg"
+      }
+    },
+    {
+      "moduleId": "100milCeramicCapacitorModuleID",
+      "fritzingVersion": "0.3.18",
+      "title": "Ceramic Capacitor",
+      "description": "100 nF multilayer Ceramic Capacitor",
+      "label": "C",
+      "properties": {
+        "family": "Capacitor [bidirectional]",
+        "capacitance": "100nF",
+        "voltage": "",
+        "package": "100 mil [THT, multilayer]"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "0",
+          "type": "male",
+          "description": "pin0",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "1",
+          "type": "male",
+          "description": "pin1",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 2,
+      "images": {
+        "icon": "icon/ceramic_capacitor_blue_icon.svg",
+        "breadboard": "breadboard/ceramic_capacitor_blue_leg.svg",
+        "schematic": "schematic/capacitor.svg",
+        "pcb": "pcb/capacitor_ceramic_100mil.svg"
+      },
+      "id": "capacitor-ceramic",
+      "fzpPath": "core/capacitor_ceramic_100mil.fzp",
+      "svgFiles": {
+        "icon": "svg_raw/capacitor-ceramic/ceramic_capacitor_blue_icon.svg",
+        "breadboard": "svg_raw/capacitor-ceramic/ceramic_capacitor_blue_leg.svg",
+        "schematic": "svg_raw/capacitor-ceramic/capacitor.svg",
+        "pcb": "svg_raw/capacitor-ceramic/capacitor_ceramic_100mil.svg"
+      }
+    },
+    {
+      "moduleId": "NPN-to92-ebc",
+      "fritzingVersion": "0.1.1255",
+      "title": "NPN-Transistor",
+      "description": "A standard NPN-transistor",
+      "label": "Q",
+      "properties": {
+        "package": "TO92 [THT]",
+        "family": "Bipolar Transistor",
+        "type": "NPN (EBC)"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "E",
+          "type": "male",
+          "description": "Emitter",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "B",
+          "type": "male",
+          "description": "Base",
+          "pinLabels": []
+        },
+        {
+          "id": "connector2",
+          "name": "C",
+          "type": "male",
+          "description": "Collector",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 3,
+      "images": {
+        "icon": "icon/basic_transistor_npnicon.svg",
+        "breadboard": "breadboard/transistor_npn.svg",
+        "schematic": "schematic/basic_transistor_npn.svg",
+        "pcb": "pcb/TO92_3_100mil_pcb.svg"
+      },
+      "id": "transistor-npn",
+      "fzpPath": "core/transistor_signal_NPN_TO92_EBC.fzp",
+      "svgFiles": {
+        "icon": "svg_raw/transistor-npn/basic_transistor_npnicon.svg",
+        "breadboard": "svg_raw/transistor-npn/transistor_npn.svg",
+        "schematic": "svg_raw/transistor-npn/basic_transistor_npn.svg",
+        "pcb": "svg_raw/transistor-npn/TO92_3_100mil_pcb.svg"
+      }
+    },
+    {
+      "moduleId": "3254CBFC44diode",
+      "fritzingVersion": "0.1.beta.1396",
+      "title": "Rectifier Diode",
+      "description": "A standard rectifier diode",
+      "label": "D",
+      "properties": {
+        "family": "Diode",
+        "type": "Rectifier",
+        "part number": "1N4001",
+        "package": "300 mil [THT]"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "cathode",
+          "type": "male",
+          "description": "Cathode Pin",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "anode",
+          "type": "male",
+          "description": "Anode Pin",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 2,
+      "images": {
+        "icon": "icon/basic-diode.svg",
+        "breadboard": "breadboard/diode.svg",
+        "schematic": "schematic/diode.svg",
+        "pcb": "pcb/DO-41_diode_2_300mil_pcb.svg"
+      },
+      "id": "diode",
+      "fzpPath": "core/diode_1N4001_300mil.fzp",
+      "svgFiles": {
+        "icon": "svg_raw/diode/basic-diode.svg",
+        "breadboard": "svg_raw/diode/diode.svg",
+        "schematic": "svg_raw/diode/diode.svg",
+        "pcb": "svg_raw/diode/DO-41_diode_2_300mil_pcb.svg"
+      }
+    }
+  ]
+}

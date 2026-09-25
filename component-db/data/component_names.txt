@@ -1,0 +1,35 @@
+# 30 个核心元件清单（面向初学者的第一批）
+# 状态：[x] 已完成  [ ] 待做（下一步扩到 30 个）
+# 格式：状态 id | 中文名 | 备注（Fritzing 里的路径等）
+
+[x] resistor            | 电阻           | core/resistor.fzp
+[x] led                 | 发光二极管     | core/LED-generic-5mm_6852162_005.fzp
+[x] capacitor-ceramic   | 陶瓷电容       | core/capacitor_ceramic_100mil.fzp
+[x] transistor-npn      | 三极管（NPN）  | core/transistor_signal_NPN_TO92_EBC.fzp
+[x] diode               | 二极管         | core/diode_1N4001_300mil.fzp
+
+[ ] capacitor-electrolytic | 电解电容    | 有正负极，跟陶瓷电容对着讲
+[ ] battery             | 电池           |
+[ ] battery-holder      | 电池盒         |
+[ ] switch-slide        | 拨动开关       |
+[ ] button-tactile      | 按键           |
+[ ] breadboard          | 面包板         |
+[ ] jumper-wire         | 杜邦线         |
+[ ] wire-solid          | 导线           |
+[ ] buzzer              | 蜂鸣器         |
+[ ] photoresistor       | 光敏电阻       |
+[ ] thermistor          | 热敏电阻       |
+[ ] potentiometer       | 电位器         |
+[ ] relay               | 继电器         |
+[ ] fuse                | 保险丝         |
+[ ] seven-segment       | 数码管         |
+[ ] lcd1602             | LCD1602 屏     |
+[ ] oled-ssd1306        | OLED 屏        |
+[ ] servo               | 舵机           |
+[ ] motor-dc            | 直流电机       |
+[ ] ultrasonic-hcsr04   | 超声波模块     |
+[ ] dht11               | 温湿度传感器   |
+[ ] ir-receiver         | 红外接收头     |
+[ ] voltage-regulator   | 稳压模块       |
+[ ] arduino-uno         | Arduino Uno    |
+[ ] esp32               | ESP32          |

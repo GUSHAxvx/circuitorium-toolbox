@@ -65,3 +65,8 @@ public/uploads/
 
 # 验证脚本的临时截图
 /.shots/
+
+# 元件库：图形来自 Fritzing（CC BY-SA 3.0），是否随仓库分发要先定许可，见 component-db/README.md
+# （脚本、技术参数 JSON、教学文案都会提交；只有图形相关的不提交）
+/component-db/data/svg_raw/
+/component-db/data/images/

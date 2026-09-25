@@ -1,0 +1,280 @@
+{
+  "generatedAt": "2026-09-25T05:24:19+00:00",
+  "count": 5,
+  "source": {
+    "repo": "https://github.com/fritzing/fritzing-parts",
+    "commit": "27535f2fd02097be9bed229b75aa8e9be282a4a0",
+    "license": "CC BY-SA 3.0（图形）",
+    "note": "图形来自 Fritzing 元件库，使用时需署名并以相同方式共享"
+  },
+  "textSource": "教学文案由 AI 撰写、人工校对（verified 字段标记是否已校对）",
+  "components": [
+    {
+      "id": "capacitor-ceramic",
+      "name": "陶瓷电容",
+      "aliases": [
+        "瓷片电容",
+        "无极性电容"
+      ],
+      "category": "基础元件",
+      "purpose": "存一点电，滤掉电压抖动，让电路更稳",
+      "appearance": "蓝色或橙色小圆片，两条引脚朝下",
+      "polarity": "没有正负极，随便接",
+      "commonModels": [
+        "100nF（104）",
+        "10nF（103）",
+        "22pF",
+        "1nF（102）"
+      ],
+      "howToRead": "印 104 就是 10×10⁴ pF，等于 0.1µF",
+      "commonMistakes": [
+        "误当电解电容，白找正负极",
+        "把 104 当成 104µF",
+        "焊太久，瓷片被烫裂"
+      ],
+      "usedInProjects": [
+        "给传感器做滤波",
+        "稳压模块旁边打下手",
+        "给单片机电源去抖"
+      ],
+      "tags": [
+        "基础",
+        "常用"
+      ],
+      "pinCount": 2,
+      "pinNames": [
+        "0",
+        "1"
+      ],
+      "package": "100 mil [THT, multilayer]",
+      "family": "Capacitor [bidirectional]",
+      "specs": {
+        "family": "Capacitor [bidirectional]",
+        "capacitance": "100nF",
+        "package": "100 mil [THT, multilayer]"
+      },
+      "sourceTitle": "Ceramic Capacitor",
+      "image": "images/capacitor-ceramic.png",
+      "source": "fritzing + ai",
+      "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
+      "verified": true,
+      "imageBytes": 5064
+    },
+    {
+      "id": "diode",
+      "name": "二极管",
+      "aliases": [
+        "整流二极管",
+        "1N4001"
+      ],
+      "category": "基础元件",
+      "purpose": "只让电流朝一个方向走，像单行道",
+      "appearance": "黑色小圆柱，一头有一圈银灰色环",
+      "polarity": "有正负极：有银环那头是负极，另一头是正极",
+      "commonModels": [
+        "1N4001",
+        "1N4007",
+        "1N4148",
+        "1N5819"
+      ],
+      "howToRead": "认那圈银环：环在哪头，哪头就是负极",
+      "commonMistakes": [
+        "接反了电路不通",
+        "拿它当稳压管用",
+        "电流超过 1A 会烧掉"
+      ],
+      "usedInProjects": [
+        "防止电源接反",
+        "把电机转出来的电整流",
+        "保护电路不被反向电压冲坏"
+      ],
+      "tags": [
+        "基础",
+        "常用"
+      ],
+      "pinCount": 2,
+      "pinNames": [
+        "cathode",
+        "anode"
+      ],
+      "package": "300 mil [THT]",
+      "family": "Diode",
+      "specs": {
+        "family": "Diode",
+        "type": "Rectifier",
+        "part number": "1N4001",
+        "package": "300 mil [THT]"
+      },
+      "sourceTitle": "Rectifier Diode",
+      "image": "images/diode.png",
+      "source": "fritzing + ai",
+      "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
+      "verified": true,
+      "imageBytes": 4048
+    },
+    {
+      "id": "resistor",
+      "name": "电阻",
+      "aliases": [
+        "色环电阻",
+        "电阻器"
+      ],
+      "category": "基础元件",
+      "purpose": "限制电流大小，别让元件被烧坏",
+      "appearance": "小圆柱，两头细引脚，身上几道彩色环",
+      "polarity": "没有正负极，哪头接哪头都行",
+      "commonModels": [
+        "220Ω",
+        "330Ω",
+        "1kΩ",
+        "10kΩ"
+      ],
+      "howToRead": "从靠金环那头读前三道色环，金环是误差",
+      "commonMistakes": [
+        "色环读反，阻值差十倍",
+        "阻值选太小，元件发烫",
+        "引脚剪太短，插不进面包板"
+      ],
+      "usedInProjects": [
+        "LED 呼吸灯",
+        "点亮小灯",
+        "三极管开关电路"
+      ],
+      "tags": [
+        "入门",
+        "基础",
+        "常用"
+      ],
+      "pinCount": 2,
+      "pinNames": [
+        "Pin 0",
+        "Pin 1"
+      ],
+      "package": "THT",
+      "family": "Resistor",
+      "specs": {
+        "Resistance": "220",
+        "family": "Resistor",
+        "power": "0.25W",
+        "Pin Spacing": "400 mil",
+        "package": "THT",
+        "bands": "4",
+        "tolerance": "±5%"
+      },
+      "sourceTitle": "220 Ω Resistor",
+      "image": "images/resistor.png",
+      "source": "fritzing + ai",
+      "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
+      "verified": true,
+      "imageBytes": 1584
+    },
+    {
+      "id": "transistor-npn",
+      "name": "三极管（NPN）",
+      "aliases": [
+        "晶体管",
+        "NPN 管",
+        "开关管"
+      ],
+      "category": "基础元件",
+      "purpose": "用一点点电流，控制一大股电流",
+      "appearance": "黑色半圆柱，一面是平的，三条腿",
+      "polarity": "有方向：E 发射极、B 基极、C 集电极，别搞混",
+      "commonModels": [
+        "S8050",
+        "2N3904",
+        "9013",
+        "BC547"
+      ],
+      "howToRead": "平面对着自己，三条腿从左到右是 E-B-C",
+      "commonMistakes": [
+        "三只脚接错，电路没反应",
+        "把 NPN 当 PNP 用，怎么都不通",
+        "基极忘了串电阻，管子会烧"
+      ],
+      "usedInProjects": [
+        "让蜂鸣器响起来",
+        "驱动小电机",
+        "继电器开关"
+      ],
+      "tags": [
+        "基础",
+        "常用"
+      ],
+      "pinCount": 3,
+      "pinNames": [
+        "E",
+        "B",
+        "C"
+      ],
+      "package": "TO92 [THT]",
+      "family": "Bipolar Transistor",
+      "specs": {
+        "package": "TO92 [THT]",
+        "family": "Bipolar Transistor",
+        "type": "NPN (EBC)"
+      },
+      "sourceTitle": "NPN-Transistor",
+      "image": "images/transistor-npn.png",
+      "source": "fritzing + ai",
+      "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
+      "verified": true,
+      "imageBytes": 3622
+    },
+    {
+      "id": "led",
+      "name": "发光二极管",
+      "aliases": [
+        "LED",
+        "指示灯",
+        "发光管"
+      ],
+      "category": "输出",
+      "purpose": "通电就发光的小灯，用来看电路状态",
+      "appearance": "半球形小灯珠，两条腿一长一短",
+      "polarity": "有正负极：长腿是正极，短腿是负极",
+      "commonModels": [
+        "5mm 红色",
+        "5mm 绿色",
+        "3mm 红色",
+        "5mm 蓝色"
+      ],
+      "howToRead": "看腿长短：长腿正极，短腿负极；灯里小的一侧是正极",
+      "commonMistakes": [
+        "长腿短腿接反，灯不亮",
+        "忘了串电阻，通电就烧",
+        "以为接反会烧，其实只是不亮"
+      ],
+      "usedInProjects": [
+        "LED 呼吸灯",
+        "电源指示灯",
+        "小夜灯"
+      ],
+      "tags": [
+        "入门",
+        "基础",
+        "常用"
+      ],
+      "pinCount": 2,
+      "pinNames": [
+        "cathode",
+        "anode"
+      ],
+      "package": "5 mm [THT]",
+      "family": "LED",
+      "specs": {
+        "package": "5 mm [THT]",
+        "family": "LED",
+        "color": "Red (633nm)",
+        "current": "0.030A",
+        "leg": "yes"
+      },
+      "sourceTitle": "Red LED - 5mm",
+      "image": "images/led.png",
+      "source": "fritzing + ai",
+      "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
+      "verified": true,
+      "imageBytes": 4986
+    }
+  ]
+}
