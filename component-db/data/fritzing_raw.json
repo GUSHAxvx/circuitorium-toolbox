@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T06:08:53+00:00",
+  "generatedAt": "2026-09-25T08:55:24+00:00",
   "source": {
     "repo": "https://github.com/fritzing/fritzing-parts",
     "commit": "27535f2fd02097be9bed229b75aa8e9be282a4a0",
@@ -8103,48 +8103,6 @@
       }
     },
     {
-      "moduleId": "Buzzer-v15",
-      "fritzingVersion": "0.5.2b.02.18.4756",
-      "title": "LilyPad Buzzer",
-      "description": "This is a small buzzer for the LilyPad system. Use 2 I/O pins on the LilyPad main board and create different noises based on the different frequency of I/O toggling. Loud enough to hear inside a pocket but not obtrusively loud. Please note: This is an inductive buzzer meaning that is will act as a short to ground if you are not actively driving it. We recommend you put both I/O pins to low (0V) when the buzzer is not used. Also, it's come to our attention that washing these buzzers will damage them. Until we've figured out a solution to this, avoid washing any portion of your project that contains one of these buzzers. LilyPad is a wearable e-textile technology developed by Leah Buechley and cooperatively designed by Leah and SparkFun. Each LilyPad was creatively designed to have large connecting pads to allow them to be sewn into clothing. Various input, output, power, and sensor boards are available. They're even washable! Note: A portion of this sale is given back to Dr. Leah Buechley for continued development and education of e-textiles. Dimensions: 20mm outer diameter Thin 0.8mm PCB",
-      "label": "",
-      "properties": {
-        "family": "microcontroller board (lilypad)",
-        "type": "Buzzer"
-      },
-      "connectors": [
-        {
-          "id": "connector2",
-          "name": "-",
-          "type": "female",
-          "description": "-",
-          "pinLabels": []
-        },
-        {
-          "id": "connector3",
-          "name": "+",
-          "type": "female",
-          "description": "+",
-          "pinLabels": []
-        }
-      ],
-      "pinCount": 2,
-      "images": {
-        "breadboard": "breadboard/Buzzer-v15_breadboard.svg",
-        "schematic": "schematic/Buzzer-v15_schematic.svg",
-        "pcb": "pcb/Buzzer-v15_pcb.svg",
-        "icon": "breadboard/Buzzer-v15_breadboard.svg"
-      },
-      "id": "buzzer",
-      "fzpPath": "core/Buzzer-v15.fzp",
-      "svgFiles": {
-        "breadboard": "svg_raw/buzzer/Buzzer-v15_breadboard.svg",
-        "schematic": "svg_raw/buzzer/Buzzer-v15_schematic.svg",
-        "pcb": "svg_raw/buzzer/Buzzer-v15_pcb.svg",
-        "icon": "svg_raw/buzzer/Buzzer-v15_breadboard.svg"
-      }
-    },
-    {
       "moduleId": "hc-sr0489a24442a28f4051a3a8757dd4825d87",
       "fritzingVersion": "0.12.34",
       "title": "HC-SR04 Ultrasonic Distance Sensor",
@@ -8963,6 +8921,50 @@
         "breadboard": "svg_raw/relay/DIP_Relay_D31A_14fadb0_002.svg",
         "schematic": "svg_raw/relay/DIP_Relay_D31A_14fadb0_002.svg",
         "pcb": "svg_raw/relay/DIP_Relay_D31A_14fadb0_002.svg"
+      }
+    },
+    {
+      "moduleId": "SparkFun-Electromechanical-BUZZER-NS",
+      "fritzingVersion": "0.7.2b",
+      "title": "Buzzer 12mm",
+      "description": "<b>Buzzer 12mm</b> Spark Fun Electronics SKU : Comp-Buzzer",
+      "label": "SG",
+      "properties": {
+        "package": "buzzer-12mm-ns",
+        "size": "12mm",
+        "family": "sparkfun Buzzer",
+        "variant": "ns"
+      },
+      "connectors": [
+        {
+          "id": "connector0",
+          "name": "1",
+          "type": "male",
+          "description": "1",
+          "pinLabels": []
+        },
+        {
+          "id": "connector1",
+          "name": "2",
+          "type": "male",
+          "description": "2",
+          "pinLabels": []
+        }
+      ],
+      "pinCount": 2,
+      "images": {
+        "breadboard": "breadboard/sparkfun-electromechanical_buzzer-12mm-ns_breadboard.svg",
+        "schematic": "schematic/sparkfun-electromechanical_buzzer_schematic.svg",
+        "pcb": "pcb/sparkfun-electromechanical_buzzer-12mm-ns_pcb.svg",
+        "icon": "icon/BUZZER-12MM-NS.svg"
+      },
+      "id": "buzzer",
+      "fzpPath": "core/sparkfun-electromechanical-buzzer-ns.fzp",
+      "svgFiles": {
+        "breadboard": "svg_raw/buzzer/sparkfun-electromechanical_buzzer-12mm-ns_breadboard.svg",
+        "schematic": "svg_raw/buzzer/sparkfun-electromechanical_buzzer_schematic.svg",
+        "pcb": "svg_raw/buzzer/sparkfun-electromechanical_buzzer-12mm-ns_pcb.svg",
+        "icon": "svg_raw/buzzer/BUZZER-12MM-NS.svg"
       }
     }
   ]

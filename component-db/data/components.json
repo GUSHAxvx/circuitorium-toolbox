@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-09-25T06:10:09+00:00",
+  "generatedAt": "2026-09-25T08:55:44+00:00",
   "count": 20,
   "source": {
     "repo": "https://github.com/fritzing/fritzing-parts",
@@ -489,7 +489,7 @@
       ],
       "category": "输出",
       "purpose": "通电就「嘀」一声，给作品加个声音反馈",
-      "appearance": "小圆柱，顶上有小孔，两只脚一长一短",
+      "appearance": "黑色小圆柱（俯看是圆片），中间一个出音孔，两只脚一长一短",
       "polarity": "有正负极：长脚（或标 + 的那侧）是正极",
       "commonModels": [
         "有源蜂鸣器 5V",
@@ -513,21 +513,23 @@
       ],
       "pinCount": 2,
       "pinNames": [
-        "-",
-        "+"
+        "1",
+        "2"
       ],
-      "package": "",
-      "family": "microcontroller board (lilypad)",
+      "package": "buzzer-12mm-ns",
+      "family": "sparkfun Buzzer",
       "specs": {
-        "family": "microcontroller board (lilypad)",
-        "type": "Buzzer"
+        "package": "buzzer-12mm-ns",
+        "size": "12mm",
+        "family": "sparkfun Buzzer",
+        "variant": "ns"
       },
-      "sourceTitle": "LilyPad Buzzer",
+      "sourceTitle": "Buzzer 12mm",
       "image": "images/buzzer.png",
       "source": "fritzing + ai",
       "imageCredit": "元件图形来自 Fritzing（CC BY-SA 3.0）",
       "verified": true,
-      "imageBytes": 11447
+      "imageBytes": 3903
     },
     {
       "id": "lcd-1602",

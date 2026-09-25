@@ -19,7 +19,7 @@
     { "id": "potentiometer", "fzp": "core/potentiometer_rotary_16mm_5.fzp" },
     { "id": "photoresistor", "fzp": "core/LDR_photocell_300mil_v5.fzp" },
     { "id": "thermistor", "fzp": "core/thermistor_300mil.fzp" },
-    { "id": "buzzer", "fzp": "core/Buzzer-v15.fzp" },
+    { "id": "buzzer", "fzp": "core/sparkfun-electromechanical-buzzer-ns.fzp" },
     { "id": "ultrasonic", "fzp": "core/hc-sr04_bf8299a_002.fzp" },
     { "id": "ir-receiver", "fzp": "core/IR_Receiver_v14.fzp" },
     { "id": "voltage-regulator", "fzp": "core/voltage_regulator_7805.fzp" },

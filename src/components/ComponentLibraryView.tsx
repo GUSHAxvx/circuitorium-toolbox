@@ -103,6 +103,33 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
 
       {error && <div className="lib-error">{error}</div>}
 
+      {/* 给学生的说明：内置的只是起步用，更希望大家自己加、互相传 */}
+      <section className="lib-intro">
+        <h2>内置的这 {builtinCount} 个，只是给你起步用的</h2>
+        <p>
+          我们挑的都是最常见、课堂上用得上的入门元件，够你把基础实验先做起来。
+          但一个真正好用的元件库，应该长成<strong>你自己的样子</strong>——
+          你手上有什么、课上用到什么、买到了什么新鲜玩意，都值得记下来。
+        </p>
+        <ul>
+          <li>
+            <strong>鼓励自己加</strong>：点右上角「＋ 自己加一个」，拍张图、写上「它是干嘛的 / 怎么认 / 有什么坑」，
+            它就和内置的一样好用，新建项目时能直接挑。
+          </li>
+          <li>
+            <strong>加完能传给别人</strong>：你自建的元件会跟着作品一起发出去。同学收下你的作品，
+            就能把元件收进他自己的库——你的库越厚，别人拿到的起点越高。
+          </li>
+          <li>
+            <strong>有能力的同学可以自己接识别服务</strong>：在「识别设置」里填上自己的凭据，
+            以后拍张照就能自动生成元件卡，攒库快得多（不接也完全不影响使用）。
+          </li>
+        </ul>
+        <p className="lib-intro-foot">
+          一句话：内置的负责让你能开始，剩下的交给你和你的同学。
+        </p>
+      </section>
+
       <div className="lib-chips">
         {categories.map((c) => (
           <button
@@ -302,6 +329,13 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
         .lib-empty span { font-size: 12.5px; color: rgba(255,255,255,0.4); }
         .lib-loading { color: rgba(255,255,255,0.4); text-align: center; padding: 120px 20px; }
         .lib-error { padding: 12px 15px; border-radius: 12px; margin-bottom: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; font-size: 13px; }
+        .lib-intro { padding: 16px 18px; border-radius: 14px; margin-bottom: 18px; background: rgba(102,126,234,0.06); border: 1px solid rgba(102,126,234,0.22); }
+        .lib-intro h2 { margin: 0 0 8px; font-size: 15px; font-weight: 800; color: #dbe4ff; }
+        .lib-intro p { margin: 0 0 10px; font-size: 13px; line-height: 1.85; color: rgba(255,255,255,0.62); }
+        .lib-intro strong { color: #fff; font-weight: 700; }
+        .lib-intro ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
+        .lib-intro li { font-size: 12.5px; line-height: 1.85; color: rgba(255,255,255,0.6); }
+        .lib-intro-foot { margin: 12px 0 0 !important; font-size: 12.5px; color: #a5b4fc !important; }
         .lib-credit { margin: 22px 0 0; font-size: 11.5px; }
         .lib-credit-link { background: none; border: none; padding: 0; cursor: pointer; font: inherit; color: rgba(255,255,255,0.35); text-decoration: underline; text-underline-offset: 3px; }
         .lib-credit-link:hover { color: #9db8ff; }
