@@ -4,6 +4,7 @@
 import { zipSync } from 'fflate';
 import type { ProjectBundle } from '@/lib/store';
 import { ECP_FORMAT, ECP_LIMITS, ECP_VERSION, extForMime, safeFileName, sniffImageMime } from '@/lib/ecp/format';
+import { buildLibrarySnapshot } from '@/lib/ecp/io';
 
 /** 分享页里内嵌作品文件的上限：超过就不内嵌（页面仍可浏览，另发 .ecp 文件） */
 export const EMBED_LIMIT_BYTES = 3 * 1024 * 1024;
@@ -91,6 +92,21 @@ export async function buildEcpBytes(bundle: ProjectBundle, author: string): Prom
     { level: 6 },
   ];
   files['images.json'] = [new TextEncoder().encode('[]'), { level: 6 }];
+
+  // 作品用到的自定义元件也一起带上：对方从分享页存下作品时，元件会跟着进他的元件库
+  try {
+    const warnings: string[] = [];
+    const snapshot = await buildLibrarySnapshot(bundle.project.id, files, warnings);
+    if (snapshot.components.length > 0) {
+      files['components_snapshot.json'] = [
+        new TextEncoder().encode(JSON.stringify(snapshot, null, 2)),
+        { level: 6 },
+      ];
+    }
+  } catch {
+    // 分享页不因为快照失败而打不开
+  }
+
   files['README.txt'] = [
     new TextEncoder().encode(`${bundle.project.name}\n\n用 CIRCUITORIUM 工具箱的「打开作品」选择本文件即可查看，并可一键做成自己的版本。\n`),
     { level: 6 },

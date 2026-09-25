@@ -327,6 +327,8 @@ class LocalToolboxStore implements ToolboxStore {
       confidence: input.confidence ?? 0,
       sortOrder: existing.length,
       createdAt: nowIso(),
+      // 来自元件库的那一行：记下编号，导出作品时会带上这个元件的快照
+      ...(input.libraryId ? { libraryId: input.libraryId } : {}),
     });
     await database.projects.update(projectId, { updatedAt: nowIso() });
     return id;

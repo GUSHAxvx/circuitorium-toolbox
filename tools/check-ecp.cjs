@@ -27,6 +27,25 @@ if (files['components.json']) {
   const c = JSON.parse(dec.decode(files['components.json']));
   const list = c.components || c;
   console.log(`元件数: ${Array.isArray(list) ? list.length : '?'}${Array.isArray(list) && list.length ? ` （例：${list.slice(0, 3).map((x) => x.component_name || x.name).join('、')}）` : ''}`);
+  if (Array.isArray(list)) {
+    const withLib = list.filter((x) => x.libraryId);
+    console.log(`  带元件库编号的行: ${withLib.length}${withLib.length ? ` （${withLib.map((x) => `${x.name}→${x.libraryId}`).join('、')}）` : ''}`);
+  }
+}
+if (files['components_snapshot.json']) {
+  const snap = JSON.parse(dec.decode(files['components_snapshot.json']));
+  const list = snap.components || [];
+  console.log(`元件快照(${list.length}): ${list.map((x) => `${x.id}[${x.source}]${x.image ? '+' + x.image : ''}`).join('、')}`);
+  const builtin = list.filter((x) => x.source === 'builtin');
+  const carry = list.filter((x) => x.source !== 'builtin');
+  console.log(`  只写引用的内置元件: ${builtin.length}${builtin.length ? ` （${builtin.map((x) => x.ref).join('、')}）` : ''}`);
+  console.log(`  带完整定义的自定义元件: ${carry.length}`);
+  for (const c of carry) {
+    const img = c.image ? (files[c.image] ? `图片 ${c.image} 在（${files[c.image].length} 字节）` : `图片 ${c.image} 缺失！`) : '无图';
+    console.log(`    - ${c.name || c.id}：${c.purpose || ''}｜${img}`);
+  }
+} else {
+  console.log('元件快照: 无（作品没用到自定义元件）');
 }
 if (files['sections.json']) {
   const s = JSON.parse(dec.decode(files['sections.json']));

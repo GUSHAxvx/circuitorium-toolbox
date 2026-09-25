@@ -50,6 +50,8 @@ export interface ToolboxComponent {
   confidence: number;
   sortOrder: number;
   createdAt: string;
+  /** 这一行来自元件库里的哪个元件（有的话）；导出作品时会跟着走 */
+  libraryId?: string;
 }
 
 /** 项目图片：图片二进制直接存在本地库里 */
@@ -138,6 +140,8 @@ export interface LocalStats {
 /** 手动添加元件的输入（AI 识别走的也是这个入口） */
 export interface ComponentInput {
   name: string;
+  /** 从元件库挑的元件：记下它的编号，导出作品时会带上快照 */
+  libraryId?: string;
   type?: string;
   model?: string;
   manufacturer?: string;

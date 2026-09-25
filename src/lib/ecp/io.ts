@@ -2,7 +2,7 @@
 
 import { zipSync, unzipSync } from 'fflate';
 import { getStore } from '@/lib/store';
-import type { ImportedBundle, ProjectBundle } from '@/lib/store';
+import type { ImportedBundle, LibraryComponentInput, ProjectBundle } from '@/lib/store';
 import {
   ECP_FORMAT,
   ECP_LIMITS,
@@ -13,10 +13,13 @@ import {
   normalizeComponents,
   normalizeImages,
   normalizeSections,
+  normalizeSnapshot,
   safeFileName,
   sniffImageMime,
   validateManifest,
   type EcpImageMeta,
+  type EcpLibraryEntry,
+  type EcpLibrarySnapshot,
   type EcpManifest,
 } from './format';
 
@@ -33,6 +36,10 @@ export interface EcpImportResult {
   name: string;
   author: string;
   counts: { components: number; sections: number; images: number };
+  /** 作品里带来的新元件，**还没写入**：等用户点「全部加入我的元件库」再存 */
+  libraryPending?: LibraryComponentInput[];
+  /** 作品里带的元件本地已经有了（同 id，保留本地版本） */
+  libraryAlready?: { id: string; name: string }[];
   warnings: string[];
 }
 
@@ -133,6 +140,7 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
         packageType: c.packageType, pinCount: c.pinCount, specifications: c.specifications,
         description: c.description, annotation: c.annotation, quantity: c.quantity,
         checked: c.checked, confidence: c.confidence, sortOrder: c.sortOrder,
+        ...(c.libraryId ? { libraryId: c.libraryId } : {}),
       })), null, 2)),
     { level: 6 },
   ];
@@ -143,6 +151,14 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
     { level: 6 },
   ];
   files['images.json'] = [textBytes(JSON.stringify(imageMetas, null, 2)), { level: 6 }];
+
+  // ===== 元件快照：作品用到的元件库里那些"不是内置"的元件，跟着作品走 =====
+  // 内置元件只写引用（对方软件里本来就有）；用户自建 / 识别来的 / 别人传来的写完整定义 + 图片。
+  const snapshot = await buildLibrarySnapshot(projectId, files, warnings);
+  if (snapshot.components.length > 0) {
+    files['components_snapshot.json'] = [textBytes(JSON.stringify(snapshot, null, 2)), { level: 6 }];
+  }
+
   files['README.txt'] = [
     textBytes(
       `${bundle.project.name}\n\n`
@@ -150,6 +166,9 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
       + `用工具箱里的「打开作品」选择这个文件即可查看，并可一键做成自己的版本。\n`
       + `作者：${manifest.project.author || '未署名'}\n`
       + `元件 ${manifest.counts.components} 个 · 教程 ${manifest.counts.sections} 节 · 图片 ${manifest.counts.images} 张\n`
+      + (snapshot.components.length > 0
+        ? `作品里还带着 ${snapshot.components.filter((c) => c.source !== 'builtin').length} 个自定义元件，打开后可以收进自己的元件库。\n`
+        : '')
       + `文件内不含任何账号、密钥或本机设置。\n`
     ),
     { level: 6 },
@@ -158,6 +177,80 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
   const zipped = zipSync(files, { level: 6 });
   const blob = new Blob([zipped as unknown as BlobPart], { type: 'application/zip' });
   return { blob, filename: `${safeFileName(bundle.project.name)}.ecp`, warnings };
+}
+
+/**
+ * 收集作品用到的库元件，生成快照。
+ * - 内置元件：只写 { id, source:'builtin', ref }，不重复存数据
+ * - 其他来源：写完整定义；有图的话把图也塞进 zip（images/lib_<id>.<ext>）
+ *
+ * 导出作品文件与生成分享页都走这里，保证两条路带的东西一样。
+ */
+export async function buildLibrarySnapshot(
+  projectId: string,
+  files: Record<string, [Uint8Array, { level: 0 | 6 }]>,
+  warnings: string[]
+): Promise<EcpLibrarySnapshot> {
+  const store = getStore();
+  const bundle = await store.getProject(projectId);
+  if (!bundle) return { version: 1, components: [] };
+
+  const ids = [...new Set(bundle.components.map((c) => c.libraryId).filter((v): v is string => !!v))];
+  if (ids.length === 0) return { version: 1, components: [] };
+
+  const entries: EcpLibraryEntry[] = [];
+  for (const id of ids) {
+    const item = await store.getLibraryComponent(id);
+    if (!item) continue; // 库里已经没有了，跳过
+
+    if (item.source === 'builtin') {
+      entries.push({ id: item.id, source: 'builtin', ref: `builtin:${item.id}` });
+      continue;
+    }
+
+    let imagePath: string | undefined;
+    const url = item.imageUrl || '';
+    if (url.startsWith('blob:')) {
+      try {
+        const blob = await fetch(url).then((r) => r.blob());
+        const bytes = await blobToBytes(blob);
+        if (bytes.byteLength <= ECP_LIMITS.maxSingleBytes) {
+          const mime = sniffImageMime(bytes) || blob.type || 'image/png';
+          imagePath = `images/lib_${item.id}.${extForMime(mime)}`;
+          files[imagePath] = [bytes, { level: 0 }];
+        } else {
+          warnings.push(`元件「${item.name}」的图片太大，没有带进作品`);
+        }
+      } catch {
+        warnings.push(`元件「${item.name}」的图片读取失败，没有带进作品`);
+      }
+    }
+
+    entries.push({
+      id: item.id,
+      source: item.source,
+      name: item.name,
+      aliases: item.aliases || [],
+      category: item.category,
+      purpose: item.purpose,
+      appearance: item.appearance,
+      polarity: item.polarity,
+      commonModels: item.commonModels || [],
+      commonMistakes: item.commonMistakes || [],
+      howToRead: item.howToRead,
+      usedInProjects: item.usedInProjects || [],
+      tags: item.tags || [],
+      pinCount: item.pinCount || 0,
+      package: item.package || '',
+      family: item.family || '',
+      specs: item.specs || {},
+      ...(imagePath ? { image: imagePath } : {}),
+      author: item.author || '',
+      createdAt: item.createdAt || '',
+    });
+  }
+
+  return { version: 1, components: entries };
 }
 
 /** 打开 .ecp 作品文件，写入本机并返回新项目 id */
@@ -270,17 +363,67 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
       packageType: c.packageType, pinCount: c.pinCount, specifications: c.specifications,
       description: c.description, annotation: c.annotation, quantity: c.quantity,
       checked: c.checked, confidence: c.confidence, sortOrder: c.sortOrder,
+      ...(c.libraryId ? { libraryId: c.libraryId } : {}),
       createdAt: manifest.project.createdAt || new Date().toISOString(),
     })),
     sections: sections.map((s) => ({ type: s.type, title: s.title, content: s.content, sortOrder: s.sortOrder })),
     images,
   });
 
+  // ===== 作品里带来的自定义元件：先攒着，等用户确认再写入本地元件库 =====
+  // （任务书要求：导入后弹提示，用户选"全部加入我的元件库"还是"只看项目"）
+  const snapshot = normalizeSnapshot(parseJson('components_snapshot.json'));
+  const carry = snapshot.components.filter((c) => c.source !== 'builtin');
+  const libraryPending: LibraryComponentInput[] = [];
+  const libraryAlready: { id: string; name: string }[] = [];
+  if (carry.length > 0) {
+    const existing = new Set((await store.listLibrary()).map((c) => c.id));
+    for (const c of carry) {
+      if (existing.has(c.id)) {
+        libraryAlready.push({ id: c.id, name: c.name || c.id });
+        continue;
+      }
+      let image: Blob | null = null;
+      if (c.image) {
+        const raw = entries[c.image];
+        const mime = raw ? sniffImageMime(raw) : null;
+        if (raw && mime && raw.byteLength <= ECP_LIMITS.maxSingleBytes) {
+          image = new Blob([raw as unknown as BlobPart], { type: mime });
+        } else if (raw) {
+          warnings.push(`元件「${c.name || c.id}」的图片没有带进来`);
+        }
+      }
+      libraryPending.push({
+        id: c.id,
+        name: c.name || c.id,
+        aliases: c.aliases,
+        category: c.category || '模块',
+        purpose: c.purpose || '',
+        appearance: c.appearance || '',
+        polarity: c.polarity || '',
+        commonModels: c.commonModels,
+        commonMistakes: c.commonMistakes,
+        howToRead: c.howToRead || '',
+        usedInProjects: c.usedInProjects,
+        tags: c.tags,
+        pinCount: c.pinCount,
+        package: c.package,
+        family: c.family,
+        specs: c.specs,
+        image,
+        source: 'imported',
+        author: c.author || author,
+      });
+    }
+  }
+
   return {
     projectId,
     name: manifest.project.name,
     author,
     counts: { components: components.length, sections: sections.length, images: images.length },
+    libraryPending,
+    libraryAlready,
     warnings,
   };
 }

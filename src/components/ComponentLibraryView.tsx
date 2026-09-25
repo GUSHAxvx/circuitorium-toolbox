@@ -10,6 +10,8 @@ import type { LibraryComponent, LibrarySource } from '@/lib/store/types';
 
 interface Props {
   onBack: () => void;
+  /** 打开「关于 · 鸣谢」（署名统一收在那一页，这里不出现第三方名称） */
+  onCredits: () => void;
 }
 
 const SOURCE_LABEL: Record<LibrarySource, { text: string; cls: string }> = {
@@ -19,7 +21,7 @@ const SOURCE_LABEL: Record<LibrarySource, { text: string; cls: string }> = {
   ai_temp: { text: '识别来的', cls: 'lib-badge lib-badge-amber' },
 };
 
-export default function ComponentLibraryView({ onBack }: Props) {
+export default function ComponentLibraryView({ onBack, onCredits }: Props) {
   const [items, setItems] = useState<LibraryComponent[]>([]);
   const [loading, setLoading] = useState(true);
   const [category, setCategory] = useState<string>('全部');
@@ -133,7 +135,9 @@ export default function ComponentLibraryView({ onBack }: Props) {
         </div>
       )}
 
-      <p className="lib-credit">元件图形来自 Fritzing（CC BY-SA 3.0）</p>
+      <p className="lib-credit">
+        <button type="button" className="lib-credit-link" onClick={onCredits}>关于 · 鸣谢</button>
+      </p>
 
       {current && (
         <div className="lib-detail-overlay" onClick={() => setOpenId(null)}>
@@ -193,7 +197,6 @@ export default function ComponentLibraryView({ onBack }: Props) {
               <span className={(SOURCE_LABEL[current.source] || SOURCE_LABEL.builtin).cls}>
                 {(SOURCE_LABEL[current.source] || SOURCE_LABEL.builtin).text}
               </span>
-              {current.imageCredit && <span className="lib-credit-inline">{current.imageCredit}</span>}
             </footer>
           </div>
         </div>
@@ -235,8 +238,9 @@ export default function ComponentLibraryView({ onBack }: Props) {
         .lib-empty span { font-size: 12.5px; color: rgba(255,255,255,0.4); }
         .lib-loading { color: rgba(255,255,255,0.4); text-align: center; padding: 120px 20px; }
         .lib-error { padding: 12px 15px; border-radius: 12px; margin-bottom: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.25); color: #fca5a5; font-size: 13px; }
-        .lib-credit { margin: 22px 0 0; font-size: 11.5px; color: rgba(255,255,255,0.3); }
-        .lib-credit-inline { font-size: 11px; color: rgba(255,255,255,0.3); }
+        .lib-credit { margin: 22px 0 0; font-size: 11.5px; }
+        .lib-credit-link { background: none; border: none; padding: 0; cursor: pointer; font: inherit; color: rgba(255,255,255,0.35); text-decoration: underline; text-underline-offset: 3px; }
+        .lib-credit-link:hover { color: #9db8ff; }
         .lib-detail-overlay { position: fixed; inset: 0; z-index: 420; background: rgba(4,7,14,0.78); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 18px; }
         .lib-detail { width: min(720px, 100%); max-height: 88vh; overflow-y: auto; background: #0d1626; border: 1px solid rgba(120,150,255,0.18); border-radius: 16px; padding: 18px; box-shadow: 0 30px 70px rgba(0,0,0,0.55); }
         .lib-detail-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; margin-bottom: 14px; }

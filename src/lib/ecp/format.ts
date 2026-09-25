@@ -62,6 +62,44 @@ export interface EcpComponent {
   checked: boolean;
   confidence: number;
   sortOrder: number;
+  /** 这一行来自元件库里的哪个元件（有的话） */
+  libraryId?: string;
+}
+
+/**
+ * 元件快照：作品用到的元件库里那些"不是内置"的元件，跟着作品一起走。
+ * 内置元件只写引用（对方本地就有），用户自建 / 识别来的 / 别人传来的写完整定义 + 图片。
+ */
+export interface EcpLibraryEntry {
+  id: string;
+  source: 'builtin' | 'user_created' | 'imported' | 'ai_temp';
+  /** source=builtin 时只写引用，不重复存数据 */
+  ref?: string;
+  name?: string;
+  aliases?: string[];
+  category?: string;
+  purpose?: string;
+  appearance?: string;
+  polarity?: string;
+  commonModels?: string[];
+  commonMistakes?: string[];
+  howToRead?: string;
+  usedInProjects?: string[];
+  tags?: string[];
+  pinCount?: number;
+  package?: string;
+  family?: string;
+  specs?: Record<string, string>;
+  /** 图片在 zip 里的路径，例如 images/lib_xyz.png */
+  image?: string;
+  author?: string;
+  createdAt?: string;
+}
+
+export interface EcpLibrarySnapshot {
+  /** 格式版本，便于以后改结构 */
+  version: number;
+  components: EcpLibraryEntry[];
 }
 
 export interface EcpSection {
@@ -90,10 +128,93 @@ export function isSafeEntryName(name: string): boolean {
 
 /** 只允许我们认识的条目名 */
 export function isExpectedEntry(name: string): boolean {
-  if (['manifest.json', 'components.json', 'sections.json', 'images.json', 'thumbnail.jpg', 'README.txt'].includes(name)) {
+  if ([
+    'manifest.json', 'components.json', 'sections.json', 'images.json',
+    'components_snapshot.json', 'thumbnail.jpg', 'README.txt',
+  ].includes(name)) {
     return true;
   }
   return /^images\/[A-Za-z0-9._-]+$/.test(name);
+}
+
+/** 快照里允许的字段长度上限（防止别人塞超长文本） */
+export const SNAPSHOT_LIMITS = {
+  maxEntries: 200,
+  maxText: 400,
+  maxList: 8,
+};
+
+function textList(raw: unknown, max = SNAPSHOT_LIMITS.maxList): string[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((v) => clampText(v, SNAPSHOT_LIMITS.maxText).trim())
+    .filter(Boolean)
+    .slice(0, max);
+}
+
+/** 校验并清洗作品文件里的元件快照（宁可丢掉可疑内容，也不要让脏数据进本地库） */
+export function normalizeSnapshot(raw: unknown): EcpLibrarySnapshot {
+  const empty: EcpLibrarySnapshot = { version: 1, components: [] };
+  if (!raw || typeof raw !== 'object') return empty;
+  const source = (raw as { components?: unknown }).components;
+  if (!Array.isArray(source)) return empty;
+
+  const sources: EcpLibraryEntry['source'][] = ['builtin', 'user_created', 'imported', 'ai_temp'];
+  const out: EcpLibraryEntry[] = [];
+  const seen = new Set<string>();
+
+  for (const item of source.slice(0, SNAPSHOT_LIMITS.maxEntries)) {
+    if (!item || typeof item !== 'object') continue;
+    const e = item as Record<string, unknown>;
+    const id = clampText(e.id, 120).trim();
+    if (!id || seen.has(id) || !/^[A-Za-z0-9._-]+$/.test(id)) continue;
+    seen.add(id);
+
+    const kind = sources.includes(e.source as EcpLibraryEntry['source'])
+      ? (e.source as EcpLibraryEntry['source'])
+      : 'imported';
+
+    if (kind === 'builtin') {
+      out.push({ id, source: 'builtin', ref: `builtin:${id}` });
+      continue;
+    }
+
+    const image = clampText(e.image, 200).trim();
+    out.push({
+      id,
+      source: kind,
+      name: clampText(e.name, SNAPSHOT_LIMITS.maxText).trim(),
+      aliases: textList(e.aliases, 3),
+      category: clampText(e.category, 40).trim(),
+      purpose: clampText(e.purpose, SNAPSHOT_LIMITS.maxText).trim(),
+      appearance: clampText(e.appearance, SNAPSHOT_LIMITS.maxText).trim(),
+      polarity: clampText(e.polarity, SNAPSHOT_LIMITS.maxText).trim(),
+      commonModels: textList(e.commonModels, 5),
+      commonMistakes: textList(e.commonMistakes, 3),
+      howToRead: clampText(e.howToRead, SNAPSHOT_LIMITS.maxText).trim(),
+      usedInProjects: textList(e.usedInProjects, 3),
+      tags: textList(e.tags, 3),
+      pinCount: clampInt(e.pinCount, 0, 200, 0),
+      package: clampText(e.package, 80).trim(),
+      family: clampText(e.family, 80).trim(),
+      specs: normalizeSpecs(e.specs),
+      image: image && isSafeEntryName(image) && isExpectedEntry(image) ? image : undefined,
+      author: clampText(e.author, 60).trim(),
+      createdAt: clampText(e.createdAt, 40).trim(),
+    });
+  }
+  return { version: 1, components: out };
+}
+
+function normalizeSpecs(raw: unknown): Record<string, string> {
+  if (!raw || typeof raw !== 'object') return {};
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(raw as Record<string, unknown>).slice(0, 20)) {
+    const key = clampText(k, 40).trim();
+    const value = clampText(v, 120).trim();
+    if (key && value) out[key] = value;
+  }
+  return out;
 }
 
 // 文本/数字清洗统一放在 @/lib/sanitize（作品文件与 AI 返回共用）
@@ -166,6 +287,10 @@ export function normalizeComponents(raw: unknown): EcpComponent[] {
       checked: Boolean(c.checked),
       confidence: clampFloat(c.confidence, 0, 1, 0),
       sortOrder: clampInt(c.sortOrder, 0, 9999, i),
+      // 保留元件库编号：导入后这一行还能指回元件库里的元件
+      ...(typeof c.libraryId === 'string' && /^[A-Za-z0-9._-]{1,120}$/.test(c.libraryId)
+        ? { libraryId: c.libraryId }
+        : {}),
     };
   });
 }

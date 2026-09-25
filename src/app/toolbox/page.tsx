@@ -8,6 +8,9 @@ import ShareWorkModal from '@/components/ShareWorkModal';
 import LocalAiRecognize from '@/components/LocalAiRecognize';
 import AiSettingsModal from '@/components/AiSettingsModal';
 import BackupModal from '@/components/BackupModal';
+import AboutModal from '@/components/AboutModal';
+import ImportLibraryPrompt from '@/components/ImportLibraryPrompt';
+import type { LibraryComponentInput } from '@/lib/store/types';
 import { getStore } from '@/lib/store';
 import { importEcpToStore, exportProjectToEcp } from '@/lib/ecp/io';
 import { saveBlob } from '@/lib/saveFile';
@@ -21,6 +24,13 @@ export default function ToolboxPage() {
   // 打开项目时在同一路由内切换视图：不发网络请求，断网也能用
   const [openId, setOpenId] = useState<string | null>(null);
   const [showLibrary, setShowLibrary] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
+  /** 打开别人作品时，作品里带来的自定义元件（等用户确认是否收进元件库） */
+  const [pendingLibrary, setPendingLibrary] = useState<{
+    items: LibraryComponentInput[];
+    alreadyHave: { id: string; name: string }[];
+    fromProject: string;
+  } | null>(null);
   const [projects, setProjects] = useState<ProjectSummary[]>([]);
   const [templates, setTemplates] = useState<ToolboxTemplate[]>([]);
   const [usage, setUsage] = useState(0);
@@ -99,6 +109,14 @@ export default function ToolboxPage() {
     }
   };
 
+  /** 导入提示处理完：收起弹层并给个回执（两个视图共用） */
+  const finishLibraryPrompt = (added: number) => {
+    setPendingLibrary(null);
+    setNotice(added > 0
+      ? `已经把 ${added} 个元件收进你的元件库——下次新建项目就能用`
+      : '好，只留着作品，没动你的元件库');
+  };
+
   const handleOpenFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -113,6 +131,14 @@ export default function ToolboxPage() {
         `收下了《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个 · 教程 ${res.counts.sections} 节 · 图片 ${res.counts.images} 张`
         + (res.warnings.length ? `（${res.warnings[0]}）` : '')
       );
+      // 作品里带着自定义元件的话，问一句要不要收进自己的元件库
+      if (res.libraryPending?.length) {
+        setPendingLibrary({
+          items: res.libraryPending,
+          alreadyHave: res.libraryAlready || [],
+          fromProject: res.name,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '这个文件打不开，可能没传完整——让对方再发一次吧');
     } finally {
@@ -136,6 +162,13 @@ export default function ToolboxPage() {
       setOpenId(res.projectId);
       setWorkCodeInput('');
       setNotice(`收下了《${res.name}》${res.author ? ` · 作者：${res.author}` : ''} · 元件 ${res.counts.components} 个`);
+      if (res.libraryPending?.length) {
+        setPendingLibrary({
+          items: res.libraryPending,
+          alreadyHave: res.libraryAlready || [],
+          fromProject: res.name,
+        });
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : '这串作品码打不开，让发的人重新生成一次吧');
     } finally {
@@ -266,7 +299,7 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
             </span>
           }
         />
-        <ComponentLibraryView onBack={() => setShowLibrary(false)} />
+        <ComponentLibraryView onBack={() => setShowLibrary(false)} onCredits={() => setShowAbout(true)} />
       </div>
     );
   }
@@ -302,6 +335,15 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
             projectId={recognizeFor}
             onClose={() => setRecognizeFor(null)}
             onAdded={() => { setDetailEpoch((n) => n + 1); void refresh(); }}
+          />
+        )}
+        {pendingLibrary && (
+          <ImportLibraryPrompt
+            items={pendingLibrary.items}
+            alreadyHave={pendingLibrary.alreadyHave}
+            fromProject={pendingLibrary.fromProject}
+            onDone={finishLibraryPrompt}
+            onClose={() => setPendingLibrary(null)}
           />
         )}
       </>
@@ -474,7 +516,10 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         </>
       </main>
 
-      <footer className="tb-footer">CIRCUITORIUM 工具箱 · 东西都在你手里</footer>
+      <footer className="tb-footer">
+        CIRCUITORIUM 工具箱 · 东西都在你手里
+        <button type="button" className="tb-foot-link" onClick={() => setShowAbout(true)}>关于 · 鸣谢</button>
+      </footer>
 
       {showAi && (
         <AiSettingsModal
@@ -485,6 +530,18 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
 
       {showBackup && (
         <BackupModal onClose={() => setShowBackup(false)} onRestored={refresh} />
+      )}
+
+      {showAbout && <AboutModal onClose={() => setShowAbout(false)} />}
+
+      {pendingLibrary && (
+        <ImportLibraryPrompt
+          items={pendingLibrary.items}
+          alreadyHave={pendingLibrary.alreadyHave}
+          fromProject={pendingLibrary.fromProject}
+          onDone={finishLibraryPrompt}
+          onClose={() => setPendingLibrary(null)}
+        />
       )}
 
       <style jsx global>{`
@@ -564,6 +621,8 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         .tb-empty p { margin: 0 0 6px; font-size: 15px; font-weight: 600; color: rgba(255,255,255,0.75); }
         .tb-empty span { font-size: 12.5px; color: rgba(255,255,255,0.4); }
         .tb-footer { position: relative; z-index: 1; text-align: center; padding: 24px 20px; font-size: 12.5px; color: rgba(255,255,255,0.28); border-top: 1px solid rgba(255,255,255,0.05); }
+        .tb-foot-link { display: block; margin: 8px auto 0; background: none; border: none; padding: 0; cursor: pointer; font: inherit; font-size: 12px; color: rgba(255,255,255,0.32); text-decoration: underline; text-underline-offset: 3px; }
+        .tb-foot-link:hover { color: #9db8ff; }
       `}</style>
     </div>
   );

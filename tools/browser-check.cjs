@@ -41,11 +41,16 @@ const CLICKS = args('click');
 const CLICKS2 = args('click2');
 // --file-input "<选择器>=<本地文件路径>"：把真实文件塞进 file input（等价于用户在系统对话框里选了文件）
 const FILE_INPUTS = args('file-input');
+
+// 读断言文件：去掉可能的 BOM（PowerShell 的 Set-Content -Encoding utf8 会写 BOM，JSON.parse 会炸）
+function readScriptFile(file) {
+  return JSON.parse(fs.readFileSync(file, 'utf8').replace(/^\uFEFF/, ''));
+}
 const EVALS = SCRIPT_FILE
-  ? JSON.parse(fs.readFileSync(SCRIPT_FILE, 'utf8'))
+  ? readScriptFile(SCRIPT_FILE)
   : args('eval');
 const EVALS2 = SCRIPT_FILE2
-  ? JSON.parse(fs.readFileSync(SCRIPT_FILE2, 'utf8'))
+  ? readScriptFile(SCRIPT_FILE2)
   : args('eval2');
 const THEN_WAIT = Number(arg('then-wait', 0));
 const OFFLINE = process.argv.includes('--offline');
