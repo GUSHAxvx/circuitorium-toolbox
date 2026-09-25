@@ -12,7 +12,9 @@ import {
   isSafeEntryName,
   normalizeCode,
   normalizeComponents,
+  normalizeDebugNotes,
   normalizeImages,
+  normalizePinRows,
   normalizeSections,
   normalizeSnapshot,
   safeFileName,
@@ -36,7 +38,7 @@ export interface EcpImportResult {
   projectId: string;
   name: string;
   author: string;
-  counts: { components: number; sections: number; images: number };
+  counts: { components: number; sections: number; images: number; code?: number; pinRows?: number; debugNotes?: number };
   /** 作品里带来的新元件，**还没写入**：等用户点「全部加入我的元件库」再存 */
   libraryPending?: LibraryComponentInput[];
   /** 作品里带的元件本地已经有了（同 id，保留本地版本） */
@@ -162,8 +164,29 @@ export async function exportProjectToEcp(projectId: string, authorName = ''): Pr
     files['code.json'] = [
       textBytes(JSON.stringify(
         codeFiles.map((c) => ({
-          name: c.name, language: c.language, content: c.content, note: c.note, sortOrder: c.sortOrder,
+          name: c.name, language: c.language, group: c.group || '', content: c.content,
+          note: c.note, encoding: c.encoding || 'utf-8', sortOrder: c.sortOrder,
         })), null, 2)),
+      { level: 6 },
+    ];
+  }
+
+  // 接线表与调试记录（卍解）：也一起带给别人
+  const pinRows = bundle.pinRows || [];
+  if (pinRows.length > 0) {
+    files['pinmap.json'] = [
+      textBytes(JSON.stringify(
+        pinRows.map((r) => ({ module: r.module, pin: r.pin, boardPin: r.boardPin, note: r.note, sortOrder: r.sortOrder })),
+        null, 2)),
+      { level: 6 },
+    ];
+  }
+  const debugNotes = bundle.debugNotes || [];
+  if (debugNotes.length > 0) {
+    files['debug.json'] = [
+      textBytes(JSON.stringify(
+        debugNotes.map((d) => ({ problem: d.problem, solution: d.solution, sortOrder: d.sortOrder })),
+        null, 2)),
       { level: 6 },
     ];
   }
@@ -365,6 +388,8 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
   const store = getStore();
   const author = manifest.project.author || fallbackAuthor;
   const codeFiles = normalizeCode(parseJson('code.json'));
+  const pinRows = normalizePinRows(parseJson('pinmap.json'));
+  const debugNotes = normalizeDebugNotes(parseJson('debug.json'));
   const projectId = await store.importBundle({
     project: {
       name: manifest.project.name,
@@ -390,8 +415,17 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
     sections: sections.map((s) => ({ type: s.type, title: s.title, content: s.content, sortOrder: s.sortOrder })),
     images,
     codeFiles: codeFiles.map((c) => ({
-      name: c.name, language: c.language, content: c.content, note: c.note,
+      name: c.name, language: c.language, group: c.group || '', content: c.content, note: c.note,
+      encoding: c.encoding || 'utf-8',
       sortOrder: c.sortOrder, createdAt: manifest.project.createdAt || new Date().toISOString(),
+    })),
+    pinRows: pinRows.map((r) => ({
+      module: r.module, pin: r.pin, boardPin: r.boardPin, note: r.note,
+      sortOrder: r.sortOrder, createdAt: manifest.project.createdAt || new Date().toISOString(),
+    })),
+    debugNotes: debugNotes.map((d) => ({
+      problem: d.problem, solution: d.solution,
+      sortOrder: d.sortOrder, createdAt: manifest.project.createdAt || new Date().toISOString(),
     })),
   });
 
@@ -446,7 +480,14 @@ export async function importEcpToStore(file: Blob, fallbackAuthor = ''): Promise
     projectId,
     name: manifest.project.name,
     author,
-    counts: { components: components.length, sections: sections.length, images: images.length },
+    counts: {
+      components: components.length,
+      sections: sections.length,
+      images: images.length,
+      code: codeFiles.length,
+      pinRows: pinRows.length,
+      debugNotes: debugNotes.length,
+    },
     libraryPending,
     libraryAlready,
     warnings,

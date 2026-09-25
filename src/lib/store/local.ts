@@ -20,6 +20,8 @@ import type {
   ProjectSummary,
   ToolboxCodeFile,
   ToolboxComponent,
+  ToolboxDebugNote,
+  ToolboxPinRow,
   ToolboxImage,
   ToolboxProject,
   ToolboxSection,
@@ -41,8 +43,26 @@ function guessLanguage(name: string): string {
   const map: Record<string, string> = {
     ino: 'Arduino', pde: 'Arduino', py: 'Python', c: 'C', h: 'C 头文件', cpp: 'C++', hpp: 'C++ 头文件',
     js: 'JavaScript', ts: 'TypeScript', json: '配置', txt: '文本', md: '说明', sh: 'Shell', mix: 'Mixly',
+    // Keil（MDK-ARM / C51）那一套
+    uvproj: 'Keil 工程', uvprojx: 'Keil 工程', uvopt: 'Keil 配置', uvoptx: 'Keil 配置',
+    sct: '分散加载', s: '汇编', asm: '汇编', a51: '汇编', inc: '汇编头文件',
+    hex: 'HEX 固件', map: '链接映射', lst: '编译列表', axf: '调试文件', lib: '库文件',
   };
   return map[ext] || (ext ? ext.toUpperCase() : '文本');
+}
+
+/** 按文件名与内容猜分组（主程序 / 头文件 / 库文件 / 工程文件 / 汇编 / 其它） */
+export function guessCodeGroup(name: string, content = ''): string {
+  const ext = (name.split('.').pop() || '').toLowerCase();
+  if (['uvproj', 'uvprojx', 'uvopt', 'uvoptx', 'sct', 'map', 'lst', 'hex'].includes(ext)) return '工程文件';
+  if (['s', 'asm', 'a51', 'inc'].includes(ext)) return '汇编';
+  if (['h', 'hpp'].includes(ext)) return '头文件';
+  if (['c', 'cpp'].includes(ext)) {
+    return /\b(int|void)\s+main\s*\(/.test(content) ? '主程序' : '库文件';
+  }
+  if (['ino', 'pde'].includes(ext)) return '主程序';
+  if (['py', 'js', 'ts', 'mix'].includes(ext)) return '主程序';
+  return '其它';
 }
 
 /** 用户库里的元件：图片存二进制，其余字段与 LibraryComponent 一致 */
@@ -59,6 +79,10 @@ class ToolboxDB extends Dexie {
   library!: Table<StoredLibraryComponent, string>;
   /** 卍解项目的程序代码 */
   codeFiles!: Table<ToolboxCodeFile, string>;
+  /** 卍解项目的接线表 */
+  pinRows!: Table<ToolboxPinRow, string>;
+  /** 卍解项目的调试记录 */
+  debugNotes!: Table<ToolboxDebugNote, string>;
 
   constructor() {
     super(DB_NAME);
@@ -77,6 +101,11 @@ class ToolboxDB extends Dexie {
     // v3：加卍解项目的程序代码（只是新增一张表，老数据不动）
     this.version(3).stores({
       codeFiles: 'id, projectId, sortOrder',
+    });
+    // v4：卍解再加接线表与调试记录（同样只加表）
+    this.version(4).stores({
+      pinRows: 'id, projectId, sortOrder',
+      debugNotes: 'id, projectId, sortOrder',
     });
   }
 }
@@ -203,11 +232,13 @@ class LocalToolboxStore implements ToolboxStore {
     const project = await database.projects.get(id);
     if (!project) return null;
 
-    const [components, sections, images, codeFiles] = await Promise.all([
+    const [components, sections, images, codeFiles, pinRows, debugNotes] = await Promise.all([
       database.components.where('projectId').equals(id).toArray(),
       database.sections.where('projectId').equals(id).toArray(),
       database.images.where('projectId').equals(id).toArray(),
       database.codeFiles.where('projectId').equals(id).toArray(),
+      database.pinRows.where('projectId').equals(id).toArray(),
+      database.debugNotes.where('projectId').equals(id).toArray(),
     ]);
 
     return {
@@ -216,6 +247,8 @@ class LocalToolboxStore implements ToolboxStore {
       sections: sections.sort((a, b) => a.sortOrder - b.sortOrder),
       images: images.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1)),
       codeFiles: codeFiles.sort((a, b) => a.sortOrder - b.sortOrder),
+      pinRows: pinRows.sort((a, b) => a.sortOrder - b.sortOrder),
+      debugNotes: debugNotes.sort((a, b) => a.sortOrder - b.sortOrder),
     };
   }
 
@@ -246,18 +279,24 @@ class LocalToolboxStore implements ToolboxStore {
     return list.sort((a, b) => a.sortOrder - b.sortOrder);
   }
 
-  async addCodeFile(projectId: string, input: { name: string; language?: string; content: string; note?: string }): Promise<string> {
+  async addCodeFile(projectId: string, input: {
+    name: string; language?: string; content: string; note?: string; group?: string; encoding?: string;
+  }): Promise<string> {
     await this.ready();
     const database = db();
     const existing = await database.codeFiles.where('projectId').equals(projectId).toArray();
     const id = newId('code');
+    const name = input.name.trim() || `代码${existing.length + 1}.txt`;
+    const content = input.content.slice(0, CODE_LIMITS.maxChars);
     await database.codeFiles.add({
       id,
       projectId,
-      name: input.name.trim() || `代码${existing.length + 1}.txt`,
-      language: (input.language || guessLanguage(input.name)).trim(),
-      content: input.content.slice(0, CODE_LIMITS.maxChars),
+      name,
+      language: (input.language || guessLanguage(name)).trim(),
+      group: (input.group || guessCodeGroup(name, content)).trim(),
+      content,
       note: (input.note || '').slice(0, 200),
+      encoding: input.encoding || 'utf-8',
       sortOrder: existing.length,
       createdAt: nowIso(),
     });
@@ -280,6 +319,84 @@ class LocalToolboxStore implements ToolboxStore {
     await db().codeFiles.delete(id);
   }
 
+  // ===== 接线表（卍解项目）=====
+  async listPinRows(projectId: string): Promise<ToolboxPinRow[]> {
+    await this.ready();
+    const list = await db().pinRows.where('projectId').equals(projectId).toArray();
+    return list.sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  async addPinRow(projectId: string, input: { module: string; pin?: string; boardPin?: string; note?: string }): Promise<string> {
+    await this.ready();
+    const database = db();
+    const existing = await database.pinRows.where('projectId').equals(projectId).toArray();
+    const id = newId('pin');
+    await database.pinRows.add({
+      id,
+      projectId,
+      module: (input.module || '').trim().slice(0, 60) || '未命名模块',
+      pin: (input.pin || '').trim().slice(0, 40),
+      boardPin: (input.boardPin || '').trim().slice(0, 40),
+      note: (input.note || '').trim().slice(0, 120),
+      sortOrder: existing.length,
+      createdAt: nowIso(),
+    });
+    await database.projects.update(projectId, { updatedAt: nowIso() });
+    return id;
+  }
+
+  async updatePinRow(id: string, patch: Partial<ToolboxPinRow>): Promise<void> {
+    await this.ready();
+    const clean = { ...patch } as Record<string, unknown>;
+    delete clean.id;
+    delete clean.projectId;
+    delete clean.createdAt;
+    await db().pinRows.update(id, clean as Partial<ToolboxPinRow>);
+  }
+
+  async removePinRow(id: string): Promise<void> {
+    await this.ready();
+    await db().pinRows.delete(id);
+  }
+
+  // ===== 调试记录（卍解项目）=====
+  async listDebugNotes(projectId: string): Promise<ToolboxDebugNote[]> {
+    await this.ready();
+    const list = await db().debugNotes.where('projectId').equals(projectId).toArray();
+    return list.sort((a, b) => a.sortOrder - b.sortOrder);
+  }
+
+  async addDebugNote(projectId: string, input: { problem: string; solution?: string }): Promise<string> {
+    await this.ready();
+    const database = db();
+    const existing = await database.debugNotes.where('projectId').equals(projectId).toArray();
+    const id = newId('dbg');
+    await database.debugNotes.add({
+      id,
+      projectId,
+      problem: (input.problem || '').trim().slice(0, 300),
+      solution: (input.solution || '').trim().slice(0, 600),
+      sortOrder: existing.length,
+      createdAt: nowIso(),
+    });
+    await database.projects.update(projectId, { updatedAt: nowIso() });
+    return id;
+  }
+
+  async updateDebugNote(id: string, patch: Partial<ToolboxDebugNote>): Promise<void> {
+    await this.ready();
+    const clean = { ...patch } as Record<string, unknown>;
+    delete clean.id;
+    delete clean.projectId;
+    delete clean.createdAt;
+    await db().debugNotes.update(id, clean as Partial<ToolboxDebugNote>);
+  }
+
+  async removeDebugNote(id: string): Promise<void> {
+    await this.ready();
+    await db().debugNotes.delete(id);
+  }
+
   async updateProject(id: string, patch: Partial<ToolboxProject>): Promise<void> {
     await this.ready();
     const clean = { ...patch } as Record<string, unknown>;
@@ -291,7 +408,7 @@ class LocalToolboxStore implements ToolboxStore {
   async deleteProject(id: string): Promise<void> {
     await this.ready();
     const database = db();
-    await database.transaction('rw', database.projects, database.components, database.sections, database.images, async () => {
+    await database.transaction('rw', [database.projects, database.components, database.sections, database.images, database.pinRows, database.debugNotes], async () => {
       await database.components.where('projectId').equals(id).delete();
       await database.sections.where('projectId').equals(id).delete();
       await database.images.where('projectId').equals(id).delete();
@@ -318,7 +435,7 @@ class LocalToolboxStore implements ToolboxStore {
         ? { type: 'template' as const, ref: origin.ref }
         : { type: 'manual' as const, ref: origin?.ref };
 
-    await database.transaction('rw', database.projects, database.components, database.sections, database.images, database.codeFiles, async () => {
+    await database.transaction('rw', [database.projects, database.components, database.sections, database.images, database.codeFiles, database.pinRows, database.debugNotes], async () => {
       await database.projects.add({
         ...bundle.project,
         id: newProjectId,
@@ -364,7 +481,7 @@ class LocalToolboxStore implements ToolboxStore {
     const database = db();
     const projectId = newId('prj');
 
-    await database.transaction('rw', database.projects, database.components, database.sections, database.images, database.codeFiles, async () => {
+    await database.transaction('rw', [database.projects, database.components, database.sections, database.images, database.codeFiles, database.pinRows, database.debugNotes], async () => {
       await database.projects.add({ ...bundle.project, id: projectId });
 
       for (const c of bundle.components) {
@@ -379,6 +496,13 @@ class LocalToolboxStore implements ToolboxStore {
       // 卍解作品带过来的程序代码
       for (const code of bundle.codeFiles || []) {
         await database.codeFiles.add({ ...code, id: newId('code'), projectId });
+      }
+      // 接线表与调试记录
+      for (const row of bundle.pinRows || []) {
+        await database.pinRows.add({ ...row, id: newId('pin'), projectId });
+      }
+      for (const note of bundle.debugNotes || []) {
+        await database.debugNotes.add({ ...note, id: newId('dbg'), projectId });
       }
     });
 

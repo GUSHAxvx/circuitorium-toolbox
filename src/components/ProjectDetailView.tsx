@@ -1605,7 +1605,7 @@ export default function ProjectDetailView({
 
         {/* ===== 程序代码：只有卍解难度的作品才有这一块 ===== */}
         {isLocal && isBankai && (
-          <ProjectCodePanel projectId={String(projectId)} onChange={() => void loadProject()} />
+          <ProjectCodePanel projectId={String(projectId)} codeNote={project.code_note || ''} onChange={() => void loadProject()} />
         )}
       </main>
 

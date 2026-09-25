@@ -105,8 +105,26 @@ export async function buildEcpBytes(bundle: ProjectBundle, author: string): Prom
     files['code.json'] = [
       new TextEncoder().encode(JSON.stringify(
         (bundle.codeFiles || []).map((c) => ({
-          name: c.name, language: c.language, content: c.content, note: c.note, sortOrder: c.sortOrder,
+          name: c.name, language: c.language, group: c.group || '', content: c.content,
+          note: c.note, encoding: c.encoding || 'utf-8', sortOrder: c.sortOrder,
         })), null, 2)),
+      { level: 6 },
+    ];
+  }
+  // 接线表与调试记录
+  if ((bundle.pinRows || []).length > 0) {
+    files['pinmap.json'] = [
+      new TextEncoder().encode(JSON.stringify(
+        (bundle.pinRows || []).map((r) => ({ module: r.module, pin: r.pin, boardPin: r.boardPin, note: r.note, sortOrder: r.sortOrder })),
+        null, 2)),
+      { level: 6 },
+    ];
+  }
+  if ((bundle.debugNotes || []).length > 0) {
+    files['debug.json'] = [
+      new TextEncoder().encode(JSON.stringify(
+        (bundle.debugNotes || []).map((d) => ({ problem: d.problem, solution: d.solution, sortOrder: d.sortOrder })),
+        null, 2)),
       { level: 6 },
     ];
   }

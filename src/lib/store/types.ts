@@ -19,17 +19,53 @@ export const DIFFICULTY_LABEL: Record<ProjectDifficulty, { name: string; hint: s
 export interface ToolboxCodeFile {
   id: string;
   projectId: string;
-  /** 文件名，例如 blink.ino */
+  /** 文件名，例如 blink.ino / main.c / project.uvprojx */
   name: string;
-  /** 语言标记（ino / py / cpp…），用来说明和显示 */
+  /** 语言标记（ino / py / cpp / Keil 工程…），用来说明和显示 */
   language: string;
+  /** 分组：主程序 / 头文件 / 库文件 / 工程文件 / 汇编 / 其它 */
+  group?: string;
   /** 代码正文 */
   content: string;
   /** 这段代码是干嘛的（可选） */
   note: string;
+  /** 原文件编码（Keil 默认 GBK，读进来时转过码） */
+  encoding?: string;
   sortOrder: number;
   createdAt: string;
 }
+
+/** 卍解项目：接线表的一行（哪个模块的哪只脚，接到开发板的哪只脚） */
+export interface ToolboxPinRow {
+  id: string;
+  projectId: string;
+  /** 模块 / 元件名，例如 超声波 HC-SR04 */
+  module: string;
+  /** 模块这头的引脚，例如 TRIG */
+  pin: string;
+  /** 开发板这头的引脚，例如 D2 */
+  boardPin: string;
+  /** 补充说明，例如「要串 1k 电阻」 */
+  note: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+/** 卍解项目：调试记录（踩过的坑与解决办法） */
+export interface ToolboxDebugNote {
+  id: string;
+  projectId: string;
+  /** 出了什么问题 */
+  problem: string;
+  /** 怎么解决的 */
+  solution: string;
+  sortOrder: number;
+  createdAt: string;
+}
+
+/** 代码分组（顺序就是界面上的顺序） */
+export const CODE_GROUPS = ['主程序', '头文件', '库文件', '工程文件', '汇编', '其它'] as const;
+export type CodeGroup = (typeof CODE_GROUPS)[number];
 
 /** 项目（作品） */
 export interface ToolboxProject {
@@ -153,6 +189,10 @@ export interface ProjectBundle {
   images: ToolboxImage[];
   /** 程序代码（只有卍解项目会有） */
   codeFiles?: ToolboxCodeFile[];
+  /** 接线表（卍解） */
+  pinRows?: ToolboxPinRow[];
+  /** 调试记录（卍解） */
+  debugNotes?: ToolboxDebugNote[];
 }
 
 /** 一次性导入用的完整数据（id 由存储层生成） */
@@ -162,6 +202,8 @@ export interface ImportedBundle {
   sections: Array<Omit<ToolboxSection, 'id' | 'projectId'>>;
   images: Array<Omit<ToolboxImage, 'id' | 'projectId'>>;
   codeFiles?: Array<Omit<ToolboxCodeFile, 'id' | 'projectId'>>;
+  pinRows?: Array<Omit<ToolboxPinRow, 'id' | 'projectId'>>;
+  debugNotes?: Array<Omit<ToolboxDebugNote, 'id' | 'projectId'>>;
 }
 
 /** 详情页展示用的统计 */
@@ -264,7 +306,9 @@ export interface ToolboxStore {
   createProject(input: { name: string; notes?: string; source?: ProjectSource; difficulty?: ProjectDifficulty }): Promise<string>;
   updateProject(
     id: string,
-    patch: Partial<Pick<ToolboxProject, 'name' | 'notes' | 'description' | 'features' | 'views' | 'remixCount' | 'source'>>
+    patch: Partial<Pick<ToolboxProject,
+      'name' | 'notes' | 'description' | 'features' | 'views' | 'remixCount' | 'source'
+      | 'difficulty' | 'codeNote'>>
   ): Promise<void>;
   deleteProject(id: string): Promise<void>;
   /** 「做同款」：复制出一个属于自己的副本 */
@@ -289,9 +333,23 @@ export interface ToolboxStore {
   // ===== 程序代码（卍解项目）=====
   /** 这个项目里的代码文件，按顺序 */
   listCodeFiles(projectId: string): Promise<ToolboxCodeFile[]>;
-  addCodeFile(projectId: string, input: { name: string; language?: string; content: string; note?: string }): Promise<string>;
+  addCodeFile(projectId: string, input: {
+    name: string; language?: string; content: string; note?: string; group?: string; encoding?: string;
+  }): Promise<string>;
   updateCodeFile(id: string, patch: Partial<ToolboxCodeFile>): Promise<void>;
   removeCodeFile(id: string): Promise<void>;
+
+  // ===== 接线表（卍解项目）=====
+  listPinRows(projectId: string): Promise<ToolboxPinRow[]>;
+  addPinRow(projectId: string, input: { module: string; pin?: string; boardPin?: string; note?: string }): Promise<string>;
+  updatePinRow(id: string, patch: Partial<ToolboxPinRow>): Promise<void>;
+  removePinRow(id: string): Promise<void>;
+
+  // ===== 调试记录（卍解项目）=====
+  listDebugNotes(projectId: string): Promise<ToolboxDebugNote[]>;
+  addDebugNote(projectId: string, input: { problem: string; solution?: string }): Promise<string>;
+  updateDebugNote(id: string, patch: Partial<ToolboxDebugNote>): Promise<void>;
+  removeDebugNote(id: string): Promise<void>;
 
   stats(projectId: string): Promise<LocalStats>;
 

@@ -63,6 +63,18 @@ if (files['code.json']) {
 } else {
   console.log('程序代码: 无');
 }
+if (files['pinmap.json']) {
+  const pins = JSON.parse(dec.decode(files['pinmap.json']));
+  console.log(`接线表(${pins.length}): ${pins.map((p) => `${p.module}/${p.pin}→${p.boardPin}`).join('、')}`);
+} else {
+  console.log('接线表: 无');
+}
+if (files['debug.json']) {
+  const dbg = JSON.parse(dec.decode(files['debug.json']));
+  console.log(`调试记录(${dbg.length}): ${dbg.map((d) => d.problem).join('、')}`);
+} else {
+  console.log('调试记录: 无');
+}
 const raw = dec.decode(buf);
 const leak = raw.match(/sk-[A-Za-z0-9]{4,}|apiKey|api_key|ai_config|teacherCode|"token"/g);
 console.log(`凭据泄漏检查: ${leak ? `发现可疑内容 ${JSON.stringify([...new Set(leak)])}` : '干净（没有 Key / 配置项）'}`);

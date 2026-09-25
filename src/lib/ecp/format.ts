@@ -56,8 +56,26 @@ export interface EcpManifest {
 export interface EcpCodeFile {
   name: string;
   language: string;
+  group?: string;
   content: string;
   note: string;
+  encoding?: string;
+  sortOrder: number;
+}
+
+/** 卍解项目：接线表的一行（pinmap.json） */
+export interface EcpPinRow {
+  module: string;
+  pin: string;
+  boardPin: string;
+  note: string;
+  sortOrder: number;
+}
+
+/** 卍解项目：一条调试记录（debug.json） */
+export interface EcpDebugNote {
+  problem: string;
+  solution: string;
   sortOrder: number;
 }
 
@@ -143,6 +161,7 @@ export function isSafeEntryName(name: string): boolean {
 export function isExpectedEntry(name: string): boolean {
   if ([
     'manifest.json', 'components.json', 'sections.json', 'images.json', 'code.json',
+    'pinmap.json', 'debug.json',
     'components_snapshot.json', 'thumbnail.jpg', 'README.txt',
   ].includes(name)) {
     return true;
@@ -150,16 +169,46 @@ export function isExpectedEntry(name: string): boolean {
   return /^images\/[A-Za-z0-9._-]+$/.test(name);
 }
 
+/** 清洗接线表 */
+export function normalizePinRows(raw: unknown): EcpPinRow[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 100).map((item, i) => {
+    const r = (item || {}) as Partial<EcpPinRow>;
+    return {
+      module: clampText(r.module, 60).trim(),
+      pin: clampText(r.pin, 40).trim(),
+      boardPin: clampText(r.boardPin, 40).trim(),
+      note: clampText(r.note, 120).trim(),
+      sortOrder: clampInt(r.sortOrder, 0, 9999, i),
+    };
+  }).filter((r) => r.module || r.pin || r.boardPin);
+}
+
+/** 清洗调试记录 */
+export function normalizeDebugNotes(raw: unknown): EcpDebugNote[] {
+  if (!Array.isArray(raw)) return [];
+  return raw.slice(0, 100).map((item, i) => {
+    const d = (item || {}) as Partial<EcpDebugNote>;
+    return {
+      problem: clampText(d.problem, 300).trim(),
+      solution: clampText(d.solution, 600).trim(),
+      sortOrder: clampInt(d.sortOrder, 0, 9999, i),
+    };
+  }).filter((d) => d.problem);
+}
+
 /** 代码校验并清洗（别人的作品文件可能塞奇奇怪怪的东西，宁缺毋滥） */
 export function normalizeCode(raw: unknown): EcpCodeFile[] {
   if (!Array.isArray(raw)) return [];
-  return raw.slice(0, 20).map((item, i) => {
+  return raw.slice(0, 40).map((item, i) => {
     const c = (item || {}) as Partial<EcpCodeFile>;
     return {
       name: clampText(c.name, 80).trim() || `代码${i + 1}.txt`,
       language: clampText(c.language, 24).trim(),
+      group: clampText(c.group, 16).trim(),
       content: typeof c.content === 'string' ? c.content.slice(0, 200_000) : '',
       note: clampText(c.note, 200),
+      encoding: clampText(c.encoding, 16).trim(),
       sortOrder: clampInt(c.sortOrder, 0, 9999, i),
     };
   }).filter((c) => c.content.length > 0);
