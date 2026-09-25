@@ -13,6 +13,7 @@
         "release": "node tools/release.mjs",
         "release:installer": "node tools/release.mjs --installer",
         "check": "tsc --noEmit && eslint",
+        "sync:library": "node tools/sync-library.mjs",
         "tauri": "tauri"
     },
     "dependencies": {
