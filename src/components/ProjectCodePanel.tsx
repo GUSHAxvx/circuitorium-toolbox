@@ -8,14 +8,17 @@
 // 只有卍解难度的作品会渲染这块；始解作品完全不受影响。
 
 import { useEffect, useRef, useState } from 'react';
-import { getStore } from '@/lib/store';
 import { CODE_GROUPS, type ToolboxCodeFile, type ToolboxDebugNote, type ToolboxPinRow } from '@/lib/store/types';
+import type { BankaiSource } from '@/lib/panelSource';
 import { copyText } from '@/lib/client';
 
 interface Props {
-  projectId: string;
+  /** 数据源：本地版走 IndexedDB，服务器版走 API */
+  source: BankaiSource;
   /** 开发环境说明存在作品本身上 */
   codeNote: string;
+  /** 不是自己的作品时只读（服务器版看别人的分享作品） */
+  canEdit?: boolean;
   onChange?: () => void;
 }
 
@@ -44,7 +47,7 @@ async function readCodeFile(file: File): Promise<{ text: string; encoding: strin
 
 const baseName = (p: string) => p.replace(/^.*[\\/]/, '').slice(0, 80);
 
-export default function ProjectCodePanel({ projectId, codeNote, onChange }: Props) {
+export default function ProjectCodePanel({ source, codeNote, canEdit = true, onChange }: Props) {
   const [tab, setTab] = useState<'code' | 'pins' | 'debug' | 'env'>('code');
   const [files, setFiles] = useState<ToolboxCodeFile[]>([]);
   const [pins, setPins] = useState<ToolboxPinRow[]>([]);
@@ -60,11 +63,10 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
   const fileRef = useRef<HTMLInputElement>(null);
 
   const load = async () => {
-    const store = getStore();
     const [c, p, d] = await Promise.all([
-      store.listCodeFiles(projectId),
-      store.listPinRows(projectId),
-      store.listDebugNotes(projectId),
+      source.listCode(),
+      source.listPins(),
+      source.listDebug(),
     ]);
     setFiles(c);
     setPins(p);
@@ -75,7 +77,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
   useEffect(() => {
     void load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [projectId]);
+  }, []);
 
   useEffect(() => { setEnv(codeNote); }, [codeNote]);
 
@@ -101,7 +103,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
     if (files.length >= LIMITS.maxFiles) { setMsg(`一个作品最多放 ${LIMITS.maxFiles} 段代码`); return; }
     setBusy(true);
     try {
-      await getStore().addCodeFile(projectId, {
+      await source.addCode({
         name: draft.name.trim() || `代码${files.length + 1}.txt`,
         content: draft.content,
         note: draft.note.trim(),
@@ -120,7 +122,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
 
   const removeCode = async (item: ToolboxCodeFile) => {
     if (!confirm(`把「${item.name}」从这件作品里删掉？`)) return;
-    await getStore().removeCodeFile(item.id);
+    await source.removeCode(item.id);
     await load();
     setMsg('已删掉');
     onChange?.();
@@ -133,7 +135,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
     if (!pinDraft.module.trim() && !pinDraft.boardPin.trim()) { setMsg('至少填个模块名或引脚'); return; }
     setBusy(true);
     try {
-      await getStore().addPinRow(projectId, pinDraft);
+      await source.addPin(pinDraft);
       setPinDraft({ module: '', pin: '', boardPin: '', note: '' });
       await load();
       setMsg('接线记下了');
@@ -148,7 +150,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
     if (!debugDraft.problem.trim()) { setMsg('先写一下遇到什么问题'); return; }
     setBusy(true);
     try {
-      await getStore().addDebugNote(projectId, debugDraft);
+      await source.addDebug(debugDraft);
       setDebugDraft({ problem: '', solution: '' });
       await load();
       setMsg('调试记录加上了');
@@ -187,6 +189,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
         <>
           <div className="pc-head">
             <p className="pc-sub">Arduino、Keil（.uvproj / .c / .h / .s）、Python 都放得下；代码会跟着作品一起传给别人</p>
+            {canEdit && (
             <div className="pc-head-actions">
               <label className="pc-btn pc-btn-soft" style={{ cursor: 'pointer' }}>
                 选一个文件
@@ -196,9 +199,10 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
                 {adding ? '收起' : '＋ 直接贴代码'}
               </button>
             </div>
+            )}
           </div>
 
-          {adding && (
+          {canEdit && adding && (
             <div className="pc-editor">
               <div className="pc-editor-row">
                 <input
@@ -276,19 +280,21 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
                     </span>
                     <div className="pc-view-actions">
                       <button className="pc-mini" onClick={async () => { await copyText(current.content); setMsg('代码已复制'); }}>复制代码</button>
+                      {canEdit && (
                       <button
                         className="pc-mini"
                         onClick={async () => {
                           const name = prompt('改个文件名：', current.name);
                           if (!name) return;
-                          await getStore().updateCodeFile(current.id, { name: name.trim().slice(0, 80) });
+                          await source.renameCode(current.id, name.trim().slice(0, 80));
                           await load();
                           setMsg('文件名已改');
                         }}
                       >
                         改名
                       </button>
-                      <button className="pc-mini pc-mini-danger" onClick={() => void removeCode(current)}>删除</button>
+                      )}
+                      {canEdit && <button className="pc-mini pc-mini-danger" onClick={() => void removeCode(current)}>删除</button>}
                     </div>
                   </div>
                   <pre className="pc-code"><code>{current.content}</code></pre>
@@ -303,6 +309,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
       {tab === 'pins' && (
         <>
           <p className="pc-sub">哪只脚接哪只脚，写清楚就不用对着照片猜了——这张表也会跟着作品传给别人</p>
+          {canEdit && (
           <div className="pc-editor pc-inline-form">
             <input className="pc-input" value={pinDraft.module} onChange={(e) => setPinDraft({ ...pinDraft, module: e.target.value })} placeholder="模块 / 元件，例如 超声波 HC-SR04" />
             <input className="pc-input pc-input-sm" value={pinDraft.pin} onChange={(e) => setPinDraft({ ...pinDraft, pin: e.target.value })} placeholder="模块引脚，例如 TRIG" />
@@ -311,6 +318,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
             <input className="pc-input" value={pinDraft.note} onChange={(e) => setPinDraft({ ...pinDraft, note: e.target.value })} placeholder="备注，例如 串 1k 电阻" />
             <button className="pc-btn pc-btn-primary" onClick={addPin} disabled={busy}>加一行</button>
           </div>
+          )}
 
           {pins.length === 0 ? (
             <p className="pc-empty">还没有接线记录。建议把电源（VCC / GND）先写清楚，再写信号脚。</p>
@@ -318,26 +326,28 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
             <div className="pc-table-wrap">
               <table className="pc-table">
                 <thead>
-                  <tr><th>模块 / 元件</th><th>模块引脚</th><th>接到</th><th>备注</th><th /></tr>
+                  <tr><th>模块 / 元件</th><th>模块引脚</th><th>接到</th><th>备注</th>{canEdit && <th />}</tr>
                 </thead>
                 <tbody>
                   {pins.map((r) => (
                     <tr key={r.id}>
                       <td>
-                        <input className="pc-cell" defaultValue={r.module} onBlur={(e) => void getStore().updatePinRow(r.id, { module: e.target.value }).then(load)} />
+                        <input className="pc-cell" readOnly={!canEdit} defaultValue={r.module} onBlur={(e) => void source.patchPin(r.id, { module: e.target.value }).then(load)} />
                       </td>
                       <td>
-                        <input className="pc-cell" defaultValue={r.pin} onBlur={(e) => void getStore().updatePinRow(r.id, { pin: e.target.value }).then(load)} />
+                        <input className="pc-cell" readOnly={!canEdit} defaultValue={r.pin} onBlur={(e) => void source.patchPin(r.id, { pin: e.target.value }).then(load)} />
                       </td>
                       <td>
-                        <input className="pc-cell pc-cell-strong" defaultValue={r.boardPin} onBlur={(e) => void getStore().updatePinRow(r.id, { boardPin: e.target.value }).then(load)} />
+                        <input className="pc-cell pc-cell-strong" readOnly={!canEdit} defaultValue={r.boardPin} onBlur={(e) => void source.patchPin(r.id, { boardPin: e.target.value }).then(load)} />
                       </td>
                       <td>
-                        <input className="pc-cell" defaultValue={r.note} onBlur={(e) => void getStore().updatePinRow(r.id, { note: e.target.value }).then(load)} />
+                        <input className="pc-cell" readOnly={!canEdit} defaultValue={r.note} onBlur={(e) => void source.patchPin(r.id, { note: e.target.value }).then(load)} />
                       </td>
-                      <td>
-                        <button className="pc-mini pc-mini-danger" onClick={async () => { await getStore().removePinRow(r.id); await load(); }}>删</button>
-                      </td>
+                      {canEdit && (
+                        <td>
+                          <button className="pc-mini pc-mini-danger" onClick={async () => { await source.removePin(r.id); await load(); }}>删</button>
+                        </td>
+                      )}
                     </tr>
                   ))}
                 </tbody>
@@ -351,6 +361,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
       {tab === 'debug' && (
         <>
           <p className="pc-sub">写代码最值钱的就是这些坑：当时什么现象、怎么解决的。别人照着能少走弯路</p>
+          {canEdit && (
           <div className="pc-editor">
             <input className="pc-input pc-input-full" value={debugDraft.problem} onChange={(e) => setDebugDraft({ ...debugDraft, problem: e.target.value })} placeholder="遇到什么问题，例如 串口一直是乱码" />
             <textarea className="pc-textarea pc-textarea-sm" rows={3} value={debugDraft.solution} onChange={(e) => setDebugDraft({ ...debugDraft, solution: e.target.value })} placeholder="怎么解决的，例如 波特率要跟代码里一致，都是 9600" />
@@ -358,6 +369,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
               <button className="pc-btn pc-btn-primary" onClick={addDebug} disabled={busy}>记下来</button>
             </div>
           </div>
+          )}
 
           {debugs.length === 0 ? (
             <p className="pc-empty">还没有调试记录。哪怕只写一条「为什么灯不亮」，对下一个做的人都是帮大忙。</p>
@@ -367,7 +379,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
                 <li key={d.id} className="pc-debug">
                   <div className="pc-debug-head">
                     <span className="pc-debug-problem">{d.problem}</span>
-                    <button className="pc-mini pc-mini-danger" onClick={async () => { await getStore().removeDebugNote(d.id); await load(); }}>删</button>
+                    {canEdit && <button className="pc-mini pc-mini-danger" onClick={async () => { await source.removeDebug(d.id); await load(); }}>删</button>}
                   </div>
                   <p className="pc-debug-solution">{d.solution || '（还没写解决办法）'}</p>
                 </li>
@@ -385,9 +397,11 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
             className="pc-textarea"
             rows={5}
             value={env}
+            readOnly={!canEdit}
             onChange={(e) => setEnv(e.target.value)}
             placeholder={'例如：\nKeil µVision5（MDK-ARM）+ STM32F103 器件包\nArduino IDE 2.x + Servo / NewPing 库\n供电：9V 电池 + 7805 稳压'}
           />
+          {canEdit && (
           <div className="pc-editor-foot">
             <button
               className="pc-btn pc-btn-primary"
@@ -395,7 +409,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
               onClick={async () => {
                 setBusy(true);
                 try {
-                  await getStore().updateProject(projectId, { codeNote: env.slice(0, 600) });
+                  await source.saveCodeNote(env.slice(0, 600));
                   setMsg('开发环境说明存好了');
                   onChange?.();
                 } finally {
@@ -407,6 +421,7 @@ export default function ProjectCodePanel({ projectId, codeNote, onChange }: Prop
             </button>
             <span className="pc-hint">这一段会跟着作品一起传给别人</span>
           </div>
+          )}
           {codeNote.trim() && env.trim() === codeNote.trim() && (
             <div className="pc-env-view">
               <p className="pc-group-title">现在的说明</p>

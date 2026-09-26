@@ -14,6 +14,10 @@ export interface ProjectRow {
   share_token: string | null;
   share_count: number;
   views: number;
+  /** 难度：shikai 始解（不用写代码）/ bankai 卍解（要写代码） */
+  difficulty?: string;
+  /** 卍解项目的开发环境说明 */
+  code_note?: string;
   created_at: string;
   updated_at: string;
 }
@@ -68,12 +72,26 @@ export async function GET(
 
   const { features, derived } = resolveFeatures(project.features, sections);
 
+  // 卍解项目的三样东西：程序代码 / 接线表 / 调试记录（与本地版一一对应）
+  const codeFiles = db.prepare(
+    'SELECT * FROM project_code_files WHERE project_id = ? ORDER BY sort_order, id'
+  ).all(id);
+  const pinRows = db.prepare(
+    'SELECT * FROM project_pin_rows WHERE project_id = ? ORDER BY sort_order, id'
+  ).all(id);
+  const debugNotes = db.prepare(
+    'SELECT * FROM project_debug_notes WHERE project_id = ? ORDER BY sort_order, id'
+  ).all(id);
+
   return NextResponse.json({
     project: { ...project, features, author_name: author?.username || '' },
     featuresDerived: derived,
     components,
     sections,
     images,
+    codeFiles,
+    pinRows,
+    debugNotes,
     isOwner,
     stats: buildStats(project, components, images, stars, starred),
   });
@@ -90,8 +108,9 @@ export async function PUT(
 
   const { id } = await params;
   const body = await request.json();
-  const { name, notes, description, features } = body as {
+  const { name, notes, description, features, difficulty, codeNote } = body as {
     name?: string; notes?: string; description?: string; features?: string;
+    difficulty?: string; codeNote?: string;
   };
 
   const project = db.prepare(
@@ -102,13 +121,20 @@ export async function PUT(
     return NextResponse.json({ error: '项目不存在' }, { status: 404 });
   }
 
+  const nextDifficulty = difficulty === 'bankai' || difficulty === 'shikai'
+    ? difficulty
+    : (project.difficulty === 'bankai' ? 'bankai' : 'shikai');
+
   db.prepare(
-    `UPDATE projects SET name = ?, notes = ?, description = ?, features = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
+    `UPDATE projects SET name = ?, notes = ?, description = ?, features = ?,
+       difficulty = ?, code_note = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?`
   ).run(
     name ?? project.name,
     notes ?? project.notes,
     description ?? project.description ?? '',
     features ?? project.features ?? '',
+    nextDifficulty,
+    codeNote ?? project.code_note ?? '',
     id
   );
 

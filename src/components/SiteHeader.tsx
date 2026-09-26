@@ -20,8 +20,9 @@ interface SiteHeaderProps {
 }
 
 // 全站统一导航：只放真实存在的入口
+// 「工具箱」排第一：元件库、始解/卍解这些新功能都在那条路由里，服务器版用户也要能一眼找到
 const defaultLinks: LinkItem[] = [
-  { href: '/', label: '首页' },
+  { href: '/toolbox', label: '工具箱' },
   { href: '/projects', label: '项目' },
   { href: '/community', label: '社区' },
   { href: '/recognize', label: 'AI识别' },

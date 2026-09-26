@@ -31,18 +31,21 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: '请先登录' }, { status: 401 });
   }
 
-  const { name, notes } = await request.json();
+  const { name, notes, difficulty } = await request.json();
 
   if (!name || !name.trim()) {
     return NextResponse.json({ error: '请输入项目名称' }, { status: 400 });
   }
 
+  // 难度：始解（不用写代码，默认）/ 卍解（要写代码）
+  const level = difficulty === 'bankai' ? 'bankai' : 'shikai';
+
   const result = db.prepare(
-    'INSERT INTO projects (user_id, name, notes) VALUES (?, ?, ?)'
-  ).run(user.userId, name.trim(), notes || '');
+    'INSERT INTO projects (user_id, name, notes, difficulty) VALUES (?, ?, ?, ?)'
+  ).run(user.userId, name.trim(), notes || '', level);
 
   return NextResponse.json({
     success: true,
-    project: { id: result.lastInsertRowid, name: name.trim(), notes: notes || '' },
+    project: { id: result.lastInsertRowid, name: name.trim(), notes: notes || '', difficulty: level },
   });
 }

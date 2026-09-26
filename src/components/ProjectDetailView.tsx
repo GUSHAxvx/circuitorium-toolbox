@@ -8,6 +8,7 @@ import QRCodeBox from '@/components/QRCodeBox';
 import LibraryPicker from '@/components/LibraryPicker';
 import ProjectCodePanel from '@/components/ProjectCodePanel';
 import { DIFFICULTY_LABEL, type ProjectDifficulty } from '@/lib/store/types';
+import { localBankaiSource, serverBankaiSource } from '@/lib/panelSource';
 import { getToken, authHeaders, copyText } from '@/lib/client';
 import { bgGradient, gridBg } from '@/styles/theme';
 import {
@@ -235,9 +236,9 @@ export default function ProjectDetailView({
 }: ProjectDetailViewProps) {
   const router = useRouter();
   const isLocal = mode === 'local';
-  /** 卍解项目：要写代码，项目里多一块「程序代码」 */
+  /** 卍解项目：要写代码，本地版与服务器版都会多出「程序代码 / 接线表 / 调试记录 / 开发环境」 */
   const [difficulty, setDifficulty] = useState<ProjectDifficulty>('shikai');
-  const isBankai = isLocal && difficulty === 'bankai';
+  const isBankai = difficulty === 'bankai';
   const isShareView = !!shareToken;
   const endpoint = isShareView
     ? `/api/share-project?token=${encodeURIComponent(String(shareToken))}`
@@ -332,6 +333,7 @@ export default function ProjectDetailView({
       const data = await res.json();
       if (res.ok) {
         setProject(data.project);
+        setDifficulty(data.project.difficulty === 'bankai' ? 'bankai' : 'shikai');
         setComponents(data.components || []);
         setSections(data.sections || []);
         setImages(data.images || []);
@@ -892,14 +894,12 @@ export default function ProjectDetailView({
                   <span className="pj-meta-stat"><Icon name="star" size={14} color="rgba(255,255,255,0.5)" />{formatCount(stats?.stars ?? 0)}</span>
                 </>
               )}
+              {/* 难度徽标：始解 = 不用写代码；卍解 = 要写代码，功能更全（本地版与服务器版都有） */}
+              <span className={`pj-diff pj-diff-${isBankai ? 'bankai' : 'shikai'}`} title={DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].hint}>
+                {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].name} · {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].short}
+              </span>
               {isLocal ? (
-                <>
-                  {/* 难度徽标：始解 = 不用写代码；卍解 = 要写代码，功能更全 */}
-                  <span className={`pj-diff pj-diff-${isBankai ? 'bankai' : 'shikai'}`} title={DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].hint}>
-                    {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].name} · {DIFFICULTY_LABEL[isBankai ? 'bankai' : 'shikai'].short}
-                  </span>
-                  {localSourceTag && <span className={localSourceTag.cls}>{localSourceTag.label}</span>}
-                </>
+                localSourceTag && <span className={localSourceTag.cls}>{localSourceTag.label}</span>
               ) : project.is_shared ? (
                 <span className="pj-tag pj-tag-green"><Icon name="check" size={12} color="#34d399" />已公开分享</span>
               ) : owner ? (
@@ -1604,8 +1604,14 @@ export default function ProjectDetailView({
         )}
 
         {/* ===== 程序代码：只有卍解难度的作品才有这一块 ===== */}
-        {isLocal && isBankai && (
-          <ProjectCodePanel projectId={String(projectId)} codeNote={project.code_note || ''} onChange={() => void loadProject()} />
+        {/* ===== 卍解专属：程序代码 / 接线表 / 调试记录 / 开发环境 ===== */}
+        {isBankai && (
+          <ProjectCodePanel
+            source={isLocal ? localBankaiSource(String(projectId)) : serverBankaiSource(String(projectId))}
+            codeNote={project.code_note || ''}
+            canEdit={isLocal || isOwner}
+            onChange={() => { if (isLocal) void loadProject(); }}
+          />
         )}
       </main>
 

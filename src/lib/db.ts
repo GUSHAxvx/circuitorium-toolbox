@@ -324,6 +324,43 @@ function createDb() {
       UNIQUE (project_id, user_id),
       FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
     );
+
+    -- 卍解项目：程序代码 / 接线表 / 调试记录（与本地版的三种数据一一对应）
+    CREATE TABLE IF NOT EXISTS project_code_files (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      name TEXT NOT NULL,
+      language TEXT DEFAULT '',
+      group_name TEXT DEFAULT '',
+      content TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      encoding TEXT DEFAULT 'utf-8',
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS project_pin_rows (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      module TEXT DEFAULT '',
+      pin TEXT DEFAULT '',
+      board_pin TEXT DEFAULT '',
+      note TEXT DEFAULT '',
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
+
+    CREATE TABLE IF NOT EXISTS project_debug_notes (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      project_id INTEGER NOT NULL,
+      problem TEXT DEFAULT '',
+      solution TEXT DEFAULT '',
+      sort_order INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
+    );
   `);
 
   // 旧库字段迁移（存在则跳过）
@@ -337,6 +374,10 @@ function createDb() {
   // 项目详情页可自主编辑的两块内容：长描述 + 主要功能（每行一条）
   try { db.exec(`ALTER TABLE projects ADD COLUMN description TEXT DEFAULT ''`); } catch { /* exists */ }
   try { db.exec(`ALTER TABLE projects ADD COLUMN features TEXT DEFAULT ''`); } catch { /* exists */ }
+  // 难度：始解（不用写代码，默认）/ 卍解（要写代码，项目里多出代码、接线表、调试记录）
+  try { db.exec(`ALTER TABLE projects ADD COLUMN difficulty TEXT DEFAULT 'shikai'`); } catch { /* exists */ }
+  // 卍解项目的开发环境说明
+  try { db.exec(`ALTER TABLE projects ADD COLUMN code_note TEXT DEFAULT ''`); } catch { /* exists */ }
 
   // 写入入门项目模板（含教程内容）
   seedProjectTemplates(db);

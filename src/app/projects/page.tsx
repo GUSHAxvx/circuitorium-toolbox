@@ -6,12 +6,14 @@ import { useRouter } from 'next/navigation';
 import { getStoredUser, getToken, authHeaders } from '@/lib/client';
 import useIsMobile from '@/hooks/useIsMobile';
 import SiteHeader from '@/components/SiteHeader';
+import { DIFFICULTY_LABEL, type ProjectDifficulty } from '@/lib/store/types';
 import { pageStyle, bgGradient, gridBg } from '@/styles/theme';
 
 interface Project {
   id: number;
   name: string;
   notes: string;
+  difficulty?: string;
   component_count: number;
   created_at: string;
   updated_at: string;
@@ -24,6 +26,7 @@ export default function ProjectsPage() {
   const [showCreate, setShowCreate] = useState(false);
   const [newName, setNewName] = useState('');
   const [newNotes, setNewNotes] = useState('');
+  const [newDifficulty, setNewDifficulty] = useState<ProjectDifficulty>('shikai');
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState('');
   const [user, setUser] = useState<{ username: string } | null>(null);
@@ -76,7 +79,7 @@ export default function ProjectsPage() {
       const res = await fetch('/api/projects', {
         method: 'POST',
         headers: authHeaders(true),
-        body: JSON.stringify({ name: newName, notes: newNotes }),
+        body: JSON.stringify({ name: newName, notes: newNotes, difficulty: newDifficulty }),
       });
 
       const data = await res.json();
@@ -84,6 +87,7 @@ export default function ProjectsPage() {
         setShowCreate(false);
         setNewName('');
         setNewNotes('');
+        setNewDifficulty('shikai');
         router.push(`/projects/${data.project.id}`);
       } else {
         setError(data.error || '创建失败');
@@ -155,6 +159,20 @@ export default function ProjectsPage() {
               value={newNotes}
               onChange={(e) => setNewNotes(e.target.value)}
             />
+            <div className="pjx-diff">
+              <span className="pjx-diff-label">难度</span>
+              {(['shikai', 'bankai'] as const).map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  className={`pjx-diff-opt${newDifficulty === level ? ' pjx-diff-opt-on' : ''}`}
+                  onClick={() => setNewDifficulty(level)}
+                >
+                  <strong>{DIFFICULTY_LABEL[level].name}</strong>
+                  <span>{DIFFICULTY_LABEL[level].hint}</span>
+                </button>
+              ))}
+            </div>
             <div className="pjx-create-row">
               <button className="pjx-btn pjx-btn-primary" onClick={handleCreate} disabled={creating}>
                 {creating ? '创建中…' : '创建'}
@@ -185,6 +203,9 @@ export default function ProjectsPage() {
                   <h3>{project.name}</h3>
                   <p className="pjx-notes">{project.notes || '还没有说明'}</p>
                   <p className="pjx-meta">
+                    <span className={`pjx-diff-badge pjx-diff-${project.difficulty === 'bankai' ? 'bankai' : 'shikai'}`}>
+                      {DIFFICULTY_LABEL[project.difficulty === 'bankai' ? 'bankai' : 'shikai'].name}
+                    </span>
                     {project.component_count} 个元件 · 更新于 {project.updated_at.slice(0, 10)}
                   </p>
                 </Link>
@@ -210,6 +231,15 @@ export default function ProjectsPage() {
         .pjx-btn:disabled { opacity: 0.5; cursor: default; }
         .pjx-input { width: 100%; box-sizing: border-box; padding: 11px 13px; margin-bottom: 10px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.12); border-radius: 10px; color: #fff; font-size: 13.5px; outline: none; font-family: inherit; }
         .pjx-input:focus { border-color: rgba(102,126,234,0.55); }
+        .pjx-diff { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; margin-bottom: 12px; }
+        .pjx-diff-label { font-size: 12.5px; color: rgba(255,255,255,0.45); }
+        .pjx-diff-opt { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; padding: 8px 14px; border-radius: 11px; cursor: pointer; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.75); font-family: inherit; text-align: left; }
+        .pjx-diff-opt strong { font-size: 13px; color: #fff; }
+        .pjx-diff-opt span { font-size: 11.5px; color: rgba(255,255,255,0.45); }
+        .pjx-diff-opt-on { background: rgba(102,126,234,0.16); border-color: rgba(102,126,234,0.5); }
+        .pjx-diff-badge { display: inline-block; margin-right: 8px; padding: 1px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 800; border: 1px solid transparent; }
+        .pjx-diff-shikai { background: rgba(148,163,184,0.14); color: #cbd5e1; border-color: rgba(148,163,184,0.3); }
+        .pjx-diff-bankai { background: rgba(251,191,36,0.14); color: #fcd34d; border-color: rgba(251,191,36,0.34); }
         .pjx-create { background: rgba(255,255,255,0.03); border: 1px solid rgba(102,126,234,0.3); border-radius: 16px; padding: 18px; margin-bottom: 18px; }
         .pjx-create h3 { margin: 0 0 12px; font-size: 15px; font-weight: 700; color: #fff; }
         .pjx-create-row { display: flex; gap: 10px; }
