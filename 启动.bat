@@ -12,7 +12,7 @@ curl -s -o NUL --max-time 2 http://localhost:3000 >nul 2>&1
 if %errorlevel%==0 (
   echo   [提示] 项目服务已在运行，直接打开浏览器
   start "" http://localhost:3000
-  goto tunnel
+  goto done
 )
 
 rem ---- 启动项目服务 ----
@@ -29,20 +29,18 @@ if %errorlevel%==0 goto ready
 set /a tries+=1
 if %tries% lss 20 goto waitloop
 echo   [警告] 服务启动超时，请查看第一个窗口的报错信息
-goto tunnel
+goto done
 
 :ready
 echo   [OK] 服务已就绪，正在打开浏览器
 start "" http://localhost:3000
 
-:tunnel
+:done
 echo.
-echo   [2/2] 启动公网隧道（第二个窗口）
-echo         窗口里会显示 https://xxx.lhr.life 链接，
-echo         把它发给任何人即可访问（不需要同一 WiFi）。
+echo   [2/2] 同一个 WiFi 下的手机、平板、别的电脑也能打开（不用装任何东西）：
+powershell -NoProfile -Command "Get-NetIPAddress -AddressFamily IPv4 | Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } | ForEach-Object { '          http://' + $_.IPAddress + ':3000/toolbox' }"
+echo          上面有几个地址就试几个，挑和手机同网段的那个。
 echo.
-start "CIRCUITORIUM-公网隧道" /D "%~dp0." cmd /k tunnel.cmd
-echo   全部启动完成。关闭窗口即停止对应服务。
-echo   隧道断线会自动重连，无需重启窗口。
+echo   小提示：上课要发给全班，用「桌面版」或「便携版」的文件更省事，不用联网。
 echo.
 pause

@@ -2,9 +2,11 @@
 # 只用 PowerShell 自带的 TcpListener，不装任何东西、不需要管理员权限。
 # 关掉这个窗口 = 停止服务（数据已经存在浏览器本地，下次打开还在）。
 
+# 参数：-Lan 表示让同一个 WiFi 下的手机/其它电脑也能打开（默认只允许本机）
 param(
   [int]$Port = 8734,
-  [string]$Root = (Join-Path $PSScriptRoot 'site')
+  [string]$Root = (Join-Path $PSScriptRoot 'site'),
+  [switch]$Lan
 )
 
 $ErrorActionPreference = 'Stop'
@@ -43,7 +45,8 @@ function Send-Response {
   $Stream.Flush()
 }
 
-$listener = [System.Net.Sockets.TcpListener]::new([System.Net.IPAddress]::Loopback, $Port)
+$bindAddress = if ($Lan) { [System.Net.IPAddress]::Any } else { [System.Net.IPAddress]::Loopback }
+$listener = [System.Net.Sockets.TcpListener]::new($bindAddress, $Port)
 try {
   $listener.Start()
 } catch {
@@ -53,7 +56,27 @@ try {
 
 Write-Host ''
 Write-Host '  CIRCUITORIUM 工具箱（便携版）已启动' -ForegroundColor Cyan
-Write-Host "  地址：http://127.0.0.1:$Port/toolbox/" -ForegroundColor Yellow
+Write-Host "  本机地址：http://127.0.0.1:$Port/toolbox/" -ForegroundColor Yellow
+if ($Lan) {
+  Write-Host ''
+  Write-Host '  同一个 WiFi 下的手机/平板/别的电脑，用下面任意一个地址打开：' -ForegroundColor Cyan
+  $ips = @()
+  try {
+    $ips = Get-NetIPAddress -AddressFamily IPv4 -ErrorAction Stop |
+      Where-Object { $_.IPAddress -notlike '127.*' -and $_.IPAddress -notlike '169.254.*' } |
+      Select-Object -ExpandProperty IPAddress -Unique
+  } catch { }
+  if ($ips.Count -gt 0) {
+    foreach ($ip in $ips) { Write-Host "      http://${ip}:$Port/toolbox" -ForegroundColor Yellow }
+    Write-Host '  （多个地址就挨个试，挑和手机同网段的那个）' -ForegroundColor DarkGray
+  } else {
+    Write-Host '      没读到本机 IP，可在命令行执行 ipconfig 查看' -ForegroundColor DarkGray
+  }
+  Write-Host ''
+  Write-Host '  打不开的话，多半是 Windows 防火墙拦了：' -ForegroundColor DarkGray
+  Write-Host "      以管理员身份运行一次：netsh advfirewall firewall add rule name=`"CIRCUITORIUM便携版`" dir=in action=allow protocol=TCP localport=$Port" -ForegroundColor DarkGray
+  Write-Host '  注意：同网段的人都能打开（内容是只读的，写不进你的电脑）。' -ForegroundColor DarkGray
+}
 Write-Host '  数据存在这台电脑的浏览器里 · 不联网也能用' -ForegroundColor DarkGray
 Write-Host '  关掉本窗口即停止服务（数据不会丢）' -ForegroundColor DarkGray
 Write-Host ''
