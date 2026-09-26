@@ -13,10 +13,10 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
     // 本地工具脚本（Node 环境，用 require 是正常的，不参与 Next 应用规则）
-    "tools/**",
+    "工具/**",
     ".tools/**",
     // 便携版构建产物（压缩后的静态资源，不参与 lint）
-    "dist-toolbox/**",
+    "便携版/**",
     ".portable-build/**",
   ]),
 ]);

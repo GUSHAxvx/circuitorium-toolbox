@@ -2,20 +2,20 @@
 """（可选）批量生成教学文案：调用项目里已有的 AI 接口，不部署本地模型。
 
 为什么是"可选"：5 个测试元件的文案是 AI（助手）直接写的，已经落在
-data/components_text.json 里。要扩到 30 个时，用这个脚本批量生成更省事。
+数据/components_text.json 里。要扩到 30 个时，用这个脚本批量生成更省事。
 
 用法：
     # 先看提示词长什么样（不联网、不需要 Key）
-    python scripts/generate_text.py --dry-run --only capacitor-electrolytic buzzer
+    python 脚本/generate_text.py --dry-run --only capacitor-electrolytic buzzer
 
     # 真正生成（OpenAI 兼容接口）
     set OPENAI_API_KEY=sk-xxx
     set OPENAI_BASE_URL=https://api.openai.com/v1     # 走中转就填中转地址
     set OPENAI_MODEL=gpt-4o
-    python scripts/generate_text.py --out data/components_text_batch2.json
+    python 脚本/generate_text.py --out 数据/components_text_batch2.json
 
 注意：
-    - 输出只写新文件，不会覆盖已校对好的 data/components_text.json
+    - 输出只写新文件，不会覆盖已校对好的 数据/components_text.json
     - 生成完必须人工抽查，然后把 verified 改成 true
     - 本机没有本地大模型；RTX 4060 8GB 也不到 Qwen3-VL-8B 建议的 12GB
 """
@@ -31,7 +31,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-DATA = ROOT / "data"
+DATA = ROOT / "数据"
 
 for stream in (sys.stdout, sys.stderr):
     if hasattr(stream, "reconfigure"):
@@ -82,7 +82,7 @@ def extract_json(text: str):
 def main() -> int:
     parser = argparse.ArgumentParser()
     parser.add_argument("--only", nargs="*", help="只生成这些 id")
-    parser.add_argument("--out", default="data/components_text_batch.json")
+    parser.add_argument("--out", default="数据/components_text_batch.json")
     parser.add_argument("--dry-run", action="store_true", help="只打印提示词")
     parser.add_argument("--names", nargs="*", help="直接给中文元件名（不给就用 parts.json 里缺文案的）")
     args = parser.parse_args()
@@ -116,7 +116,7 @@ def main() -> int:
     model = os.environ.get("OPENAI_MODEL", "gpt-4o")
     if not key:
         print("[文案] 没有 OPENAI_API_KEY。要么先设置环境变量，要么用 --dry-run 看提示词，", file=sys.stderr)
-        print("       要么直接手写 data/components_text.json（5 个测试元件就是这么来的）。", file=sys.stderr)
+        print("       要么直接手写 数据/components_text.json（5 个测试元件就是这么来的）。", file=sys.stderr)
         return 1
 
     body = json.dumps({

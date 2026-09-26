@@ -11,7 +11,7 @@ echo   建立成功后，窗口里会显示 https://... 链接，
 echo   并自动复制到剪贴板、保存到「当前公网地址.txt」。
 echo   断线会自动重连；按 Ctrl+C 或关闭窗口即彻底停止。
 echo.
-powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0tools\tunnel.ps1"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0工具\tunnel.ps1"
 echo.
 echo   隧道脚本已退出。按任意键关闭本窗口。
 pause

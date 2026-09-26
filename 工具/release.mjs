@@ -6,7 +6,7 @@
 //   npm run release -- --tag        完成后自动 git 提交并打版本标签（版本号取 package.json）
 //   npm run release -- --skip-checks 跳过 tsc/eslint（着急出包时用）
 //
-// 产物统一放到 dist-toolbox/ 与 dist-desktop/，两个目录都在 .gitignore 里。
+// 产物统一放到 便携版/ 与 桌面版/，两个目录都在 .gitignore 里。
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -54,15 +54,15 @@ if (!skipChecks) {
 }
 
 // ---- 2. 便携版（静态站点）----
-run('打包便携版', 'node', ['tools/build-portable.mjs']);
+run('打包便携版', 'node', ['工具/build-portable.mjs']);
 
 // ---- 3. 桌面版 ----
 run(withInstaller ? '打包桌面版 exe + 安装包' : '打包桌面版 exe', 'node',
-  ['tools/build-desktop.mjs', ...(withInstaller ? ['--bundle'] : [])]);
+  ['工具/build-desktop.mjs', ...(withInstaller ? ['--bundle'] : [])]);
 
-// ---- 4. 归拢产物到 dist-desktop ----
+// ---- 4. 归拢产物到 桌面版 ----
 const releaseDir = 'D:\\rust\\target\\circuitorium\\release';
-const distDesktop = path.join(root, 'dist-desktop');
+const distDesktop = path.join(root, '桌面版');
 fs.mkdirSync(distDesktop, { recursive: true });
 const staged = [];
 const copy = (from, toName) => {
@@ -82,7 +82,7 @@ if (withInstaller && fs.existsSync(nsisDir)) {
   // 这次没打安装包：不覆盖、也不用它冒充新产物
   staleInstaller = true;
 }
-// 安装过旧安装包的话，旧文件会残留在 dist-desktop，这里只报告不删
+// 安装过旧安装包的话，旧文件会残留在 桌面版，这里只报告不删
 
 // ---- 5. 版本标签 ----
 if (withTag) {
@@ -126,10 +126,10 @@ function summary() {
       console.log(`     - ${f.name}  ${mb(path.join(full, f.name))}`);
     }
   };
-  listDir('dist-desktop', '桌面版');
-  listDir('dist-toolbox', '便携版');
+  listDir('桌面版', '桌面版');
+  listDir('便携版', '便携版');
   if (staleInstaller) {
-    console.log('   注意：dist-desktop\\CIRCUITORIUM工具箱-安装包.exe 是上一次打的，本次没有重新生成');
+    console.log('   注意：桌面版\\CIRCUITORIUM工具箱-安装包.exe 是上一次打的，本次没有重新生成');
     console.log('        要一起更新就加 --installer（npm run release:installer）');
   }
   if (withTag) {

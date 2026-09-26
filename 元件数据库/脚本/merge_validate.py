@@ -2,8 +2,8 @@
 """合并「Fritzing 技术参数」与「教学文案」，校验后输出最终 components.json。
 
 用法：
-    python scripts/merge_validate.py            # 合并 + 校验
-    python scripts/merge_validate.py --strict   # 有任何一条不合规就以非零退出（给 CI / 发版用）
+    python 脚本/merge_validate.py            # 合并 + 校验
+    python 脚本/merge_validate.py --strict   # 有任何一条不合规就以非零退出（给 CI / 发版用）
 
 校验规则（对应任务书的验收标准）：
     id 唯一 · 必填字段不缺 · category 在允许列表内
@@ -22,7 +22,7 @@ from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parent
-DATA = ROOT / "data"
+DATA = ROOT / "数据"
 
 for stream in (sys.stdout, sys.stderr):
     if hasattr(stream, "reconfigure"):

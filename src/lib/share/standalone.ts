@@ -229,7 +229,7 @@ export async function buildShareHtml(options: ShareHtmlOptions): Promise<{ html:
   .c-type { display: block; font-size: 11px; color: #9db8ff; font-weight: 400; margin-top: 2px; }
   .c-model { font-family: ui-monospace, Menlo, monospace; font-size: 11.5px; color: #9db8ff; }
   .c-qty { text-align: center; }
-  .shots { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
+  截图 { display: grid; gap: 10px; grid-template-columns: repeat(auto-fill, minmax(min(240px, 100%), 1fr)); }
   .shot { margin: 0; border: 1px solid rgba(255,255,255,.08); border-radius: 10px; overflow: hidden; background: #060a14; }
   .shot img { display: block; width: 100%; height: 170px; object-fit: cover; }
   .shot figcaption { padding: 6px 9px; font-size: 11.5px; color: rgba(255,255,255,.5); }

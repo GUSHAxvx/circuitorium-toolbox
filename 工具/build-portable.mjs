@@ -3,10 +3,10 @@
 // 做法（全程不动正在开发用的源码，也不影响正在运行的 dev server）：
 //   1. 把源码子集复制到 .portable-build/，并在副本里删掉服务器专属路由
 //   2. 用 TOOLBOX_EXPORT=1 在副本里跑 next build（产出纯静态 out/）
-//   3. 组装 dist-toolbox/：静态站点 + 启动.bat + server.ps1 + 使用说明
+//   3. 组装 便携版/：静态站点 + 启动.bat + server.ps1 + 使用说明
 //   4. 清掉副本
 //
-// 用法：node tools/build-portable.mjs
+// 用法：node 工具/build-portable.mjs
 
 import { execSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -14,9 +14,9 @@ import path from 'node:path';
 
 const root = path.resolve(import.meta.dirname, '..');
 const workDir = path.join(root, '.portable-build');
-const distDir = path.join(root, 'dist-toolbox');
+const distDir = path.join(root, '便携版');
 const siteDir = path.join(distDir, 'site');
-const portableFiles = path.join(root, 'tools', 'portable');
+const portableFiles = path.join(root, '工具', 'portable');
 
 // 静态导出用不到的路由（服务器版仍然需要，这里只在副本里删掉）
 const SERVER_ONLY = [
@@ -137,7 +137,7 @@ try {
   if (!fs.existsSync(outDir)) throw new Error('构建没有产出 out/ 目录');
   if (!fs.existsSync(path.join(outDir, 'toolbox'))) throw new Error('out/ 里没有 toolbox 页面');
 
-  log('组装 dist-toolbox …');
+  log('组装 便携版 …');
   fs.rmSync(distDir, { recursive: true, force: true });
   copyDir(outDir, siteDir);
   fs.writeFileSync(path.join(siteDir, 'index.html'), REDIRECT_HTML, 'utf8');
@@ -147,7 +147,7 @@ try {
   fs.writeFileSync(path.join(distDir, '使用说明.txt'), README, 'utf8');
 
   const { bytes, files } = dirSize(distDir);
-  log(`完成：dist-toolbox/（${files} 个文件，${(bytes / 1024 / 1024).toFixed(2)} MB）`);
+  log(`完成：便携版/（${files} 个文件，${(bytes / 1024 / 1024).toFixed(2)} MB）`);
 
   fs.rmSync(workDir, { recursive: true, force: true });
   log('已清理构建副本');

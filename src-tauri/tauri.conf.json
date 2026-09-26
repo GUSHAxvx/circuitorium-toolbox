@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "identifier": "com.circuitorium.toolbox",
   "build": {
-    "frontendDist": "../dist-toolbox/site"
+    "frontendDist": "../便携版/site"
   },
   "app": {
     "windows": [

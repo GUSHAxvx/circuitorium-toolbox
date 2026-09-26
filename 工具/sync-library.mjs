@@ -1,6 +1,6 @@
 // 把元件库流水线的产物同步进应用（数据 + 图片）
 //
-// 源：component-db/data/components.json + component-db/data/images/*.png
+// 源：元件数据库/数据/components.json + 元件数据库/数据/images/*.png
 // 目标：src/lib/library/builtin.json（给打包用）+ public/library/*.png（静态资源）
 //
 // 用法：npm run sync:library
@@ -10,13 +10,13 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const srcJson = path.join(root, 'component-db', 'data', 'components.json');
-const srcImages = path.join(root, 'component-db', 'data', 'images');
+const srcJson = path.join(root, '元件数据库', '数据', 'components.json');
+const srcImages = path.join(root, '元件数据库', '数据', 'images');
 const dstJson = path.join(root, 'src', 'lib', 'library', 'builtin.json');
 const dstImages = path.join(root, 'public', 'library');
 
 if (!fs.existsSync(srcJson)) {
-  console.error(`[同步] 找不到 ${srcJson}\n        先在 component-db/ 里跑：python scripts\\extract_fritzing.py && node scripts\\render_images.mjs && python scripts\\merge_validate.py`);
+  console.error(`[同步] 找不到 ${srcJson}\n        先在 元件数据库/ 里跑：python 脚本/extract_fritzing.py && node 脚本/render_images.mjs && python 脚本/merge_validate.py`);
   process.exit(1);
 }
 
@@ -56,7 +56,7 @@ fs.writeFileSync(
   dstJson,
   JSON.stringify(
     {
-      _comment: '自动生成，勿手改。来源：component-db/data/components.json（npm run sync:library）',
+      _comment: '自动生成，勿手改。来源：元件数据库/数据/components.json（npm run sync:library）',
       generatedAt: payload.generatedAt,
       count: compact.length,
       components: compact,

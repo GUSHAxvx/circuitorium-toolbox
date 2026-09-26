@@ -1,7 +1,7 @@
 // 内置元件库（随软件打包，只读）
 //
-// 数据来源：component-db/ 那条流水线（从元件库提取技术参数 + 补教学文案）
-// 这个文件不要手改：跑 `npm run sync:library` 会从 component-db/data/components.json 重新生成本文件，
+// 数据来源：元件数据库/ 那条流水线（从元件库提取技术参数 + 补教学文案）
+// 这个文件不要手改：跑 `npm run sync:library` 会从 元件数据库/数据/components.json 重新生成本文件，
 // 并把元件图拷到 public/library/。
 
 import raw from './builtin.json';

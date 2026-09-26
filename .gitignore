@@ -53,19 +53,19 @@ public/uploads/
 /当前公网地址.txt
 
 # 便携版构建产物
-/dist-toolbox/
+/便携版/
 /.portable-build/
 
 # 桌面版构建产物（exe 与安装包都能重新生成）
-/dist-desktop/
+/桌面版/
 
 # Tauri / Rust 构建产物（真正的 target 在 D 盘，这里兜底）
 /src-tauri/target/
 /src-tauri/gen/schemas/
 
 # 验证脚本的临时截图
-/.shots/
+/截图/
 
 # 元件库：图形来自 Fritzing（CC BY-SA 3.0）。已确定接受署名方案，所以渲染好的元件图随仓库分发；
 # 原始 SVG 只是中间产物，不提交（跑 extract_fritzing.py 可随时重新生成）
-/component-db/data/svg_raw/
+/元件数据库/数据/svg_raw/

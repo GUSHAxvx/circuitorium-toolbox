@@ -1,4 +1,4 @@
-// 由 data.db 自动导出，请勿手改（重新生成：node tools/export-templates.cjs）
+// 由 data.db 自动导出，请勿手改（重新生成：node 工具/export-templates.cjs）
 // 内置项目模板：本地工具箱离线自带，无需服务器
 import type { ToolboxTemplate } from './types';
 

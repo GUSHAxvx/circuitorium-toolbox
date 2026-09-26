@@ -1,4 +1,4 @@
-﻿# CIRCUITORIUM 公网隧道守护脚本
+# CIRCUITORIUM 公网隧道守护脚本
 # 优先使用 cloudflared（稳定），未找到时回退到 localhost.run
 # 特点：自动重连 + 自动抓取公网地址 + 复制到剪贴板 + 写入「当前公网地址.txt」
 

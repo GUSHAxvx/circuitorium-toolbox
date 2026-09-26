@@ -1,17 +1,17 @@
 #!/usr/bin/env python3
 """从 Fritzing 元件库提取元件的技术参数与图形素材。
 
-数据来源：fritzing/fritzing-parts（图形为 CC BY-SA 3.0，见 component-db/README.md）
+数据来源：fritzing/fritzing-parts（图形为 CC BY-SA 3.0，见 元件数据库/README.md）
 本脚本只用 Python 标准库：git 取文件、ElementTree 解析 XML。
 
 用法：
-    python scripts/extract_fritzing.py                 # 用 scripts/parts.json 里的清单
-    python scripts/extract_fritzing.py --only resistor led
-    python scripts/extract_fritzing.py --repo D:\\fritzing-parts --out data
+    python 脚本/extract_fritzing.py                 # 用 脚本/parts.json 里的清单
+    python 脚本/extract_fritzing.py --only resistor led
+    python 脚本/extract_fritzing.py --repo D:\\fritzing-parts --out data
 
 产物：
-    data/fritzing_raw.json      技术参数 + 各视图 SVG 的相对路径
-    data/svg_raw/<id>/*.svg     原始 SVG（中间产物，可重新生成）
+    数据/fritzing_raw.json      技术参数 + 各视图 SVG 的相对路径
+    数据/svg_raw/<id>/*.svg     原始 SVG（中间产物，可重新生成）
 """
 
 from __future__ import annotations
@@ -25,9 +25,9 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 HERE = Path(__file__).resolve().parent
-ROOT = HERE.parent                      # component-db/
+ROOT = HERE.parent                      # 元件数据库/
 DEFAULT_REPO = Path(r"D:\fritzing-parts")
-DEFAULT_OUT = ROOT / "data"
+DEFAULT_OUT = ROOT / "数据"
 
 # Windows 上控制台默认是 GBK，中文和 ✓ 会直接抛 UnicodeEncodeError
 for stream in (sys.stdout, sys.stderr):

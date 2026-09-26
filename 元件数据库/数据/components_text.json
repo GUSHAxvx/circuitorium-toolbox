@@ -1,5 +1,5 @@
 {
-  "_comment": "教学文案（Fritzing 提取不到的部分）。字段与长度限制见 scripts/merge_validate.py。逐条校对后把 verified 改成 true。",
+  "_comment": "教学文案（Fritzing 提取不到的部分）。字段与长度限制见 脚本/merge_validate.py。逐条校对后把 verified 改成 true。",
   "components": [
     {
       "id": "resistor",

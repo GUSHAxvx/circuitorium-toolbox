@@ -1,7 +1,7 @@
 // 从现有 data.db 导出内置项目模板 -> src/lib/store/templateSeed.ts
 // 目的：本地工具箱不需要服务器也要自带教程内容
 const fs = require('fs');
-const root = 'C:/Users/Administrator/component-recognition-deploy';
+const root = 'D:/circuitorium-toolbox';
 const Database = require(root + '/node_modules/better-sqlite3');
 
 const db = new Database(root + '/data.db', { readonly: true });
@@ -48,7 +48,7 @@ const out = templates.map((t) => {
   };
 });
 
-const header = `// 由 data.db 自动导出，请勿手改（重新生成：node tools/export-templates.cjs）
+const header = `// 由 data.db 自动导出，请勿手改（重新生成：node 工具/export-templates.cjs）
 // 内置项目模板：本地工具箱离线自带，无需服务器
 import type { ToolboxTemplate } from './types';
 

@@ -1,12 +1,12 @@
 // 打包桌面版（Tauri）：先做静态站点，再编 Rust 外壳
 // 用法：
-//   node tools/build-desktop.mjs            只出 exe（便携，双击即用）
-//   node tools/build-desktop.mjs --bundle   再尝试做安装包（需要能访问 GitHub 下载 NSIS，国内可能失败）
+//   node 工具/build-desktop.mjs            只出 exe（便携，双击即用）
+//   node 工具/build-desktop.mjs --bundle   再尝试做安装包（需要能访问 GitHub 下载 NSIS，国内可能失败）
 //
 // 说明：
 // - Rust 工具链装在 D:\rust（RUSTUP_HOME / CARGO_HOME 指向那里）
 // - cargo 的 target 目录也在 D 盘（D:\rust\target\circuitorium，见 D:\rust\cargo\config.toml）
-// - 前端就是 dist-toolbox/site（Next 静态导出，只有 /toolbox 一个页面）
+// - 前端就是 便携版/site（Next 静态导出，只有 /toolbox 一个页面）
 
 import { spawnSync } from 'node:child_process';
 import fs from 'node:fs';
@@ -34,10 +34,10 @@ function run(cmd, args, label) {
 }
 
 // 1) 前端静态站点
-if (!fs.existsSync(path.join(root, 'dist-toolbox', 'site', 'toolbox', 'index.html'))) {
-  run('node', ['tools/build-portable.mjs'], '生成静态站点（dist-toolbox/site）');
+if (!fs.existsSync(path.join(root, '便携版', 'site', 'toolbox', 'index.html'))) {
+  run('node', ['工具/build-portable.mjs'], '生成静态站点（便携版/site）');
 } else {
-  console.log('[desktop] 复用已有静态站点 dist-toolbox/site（需要重新生成就删掉它再跑）');
+  console.log('[desktop] 复用已有静态站点 便携版/site（需要重新生成就删掉它再跑）');
 }
 
 // 2) Rust 外壳

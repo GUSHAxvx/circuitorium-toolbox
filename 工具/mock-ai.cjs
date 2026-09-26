@@ -1,5 +1,5 @@
 // 临时模拟识别服务：验证「AI 识别 → 存进我的元件库」这条链，不消耗任何真实额度。
-// 用法：node tools/mock-ai.cjs [端口]      （默认 8799）
+// 用法：node 工具/mock-ai.cjs [端口]      （默认 8799）
 // 它只回答 OpenAI 兼容的 /chat/completions，返回两个假元件。
 
 const http = require('http');

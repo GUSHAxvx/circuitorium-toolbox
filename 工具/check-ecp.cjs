@@ -1,12 +1,12 @@
 // 检查导出的 .ecp：结构、内容、有没有夹带凭据
-// 用法：node tools/check-ecp.cjs <文件路径>
+// 用法：node 工具/check-ecp.cjs <文件路径>
 const fs = require('fs');
 const path = require('path');
 const { unzipSync } = require('fflate');
 
 const file = process.argv[2];
 if (!file) {
-  console.error('用法：node tools/check-ecp.cjs <作品文件.ecp>');
+  console.error('用法：node 工具/check-ecp.cjs <作品文件.ecp>');
   process.exit(1);
 }
 const buf = new Uint8Array(fs.readFileSync(file));

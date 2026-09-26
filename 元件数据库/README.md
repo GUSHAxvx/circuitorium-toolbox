@@ -22,21 +22,21 @@
 2. 每个元件数据里的 `imageCredit` 字段
 3. 仓库根目录 `素材来源与许可.md`
 
-`data/images/`（渲染好的元件图）**随仓库分发**；`data/svg_raw/`（原始 SVG）只是中间产物，不提交，随时可重新生成。
+`数据/images/`（渲染好的元件图）**随仓库分发**；`数据/svg_raw/`（原始 SVG）只是中间产物，不提交，随时可重新生成。
 
 ---
 
 ## 目录
 
 ```
-component-db/
-  scripts/
+元件数据库/
+  脚本/
     parts.json            要提取哪些元件（id → Fritzing 仓库里的路径）
     extract_fritzing.py   从 Fritzing 仓库提取技术参数 + 四视图 SVG
     render_images.mjs     SVG → 统一风格的 PNG（白底 512×512，压缩）
     merge_validate.py     合并技术参数与教学文案，校验后输出 components.json
     generate_text.py      （可选）批量生成教学文案，走 OpenAI 兼容接口
-  data/
+  数据/
     component_names.txt   30 个核心元件清单与进度
     fritzing_raw.json     ① 提取产物：技术参数 + 引脚 + 图片路径
     components_text.json  ② 教学文案（AI 撰写 + 人工校对，verified 标记）
@@ -51,7 +51,7 @@ component-db/
 # 0) 一次性：拉 Fritzing 元件库（只拉目录树，按需取文件，不用全量下载）
 git clone --filter=blob:none --no-checkout --depth 1 https://github.com/fritzing/fritzing-parts.git D:\fritzing-parts
 
-cd C:\Users\Administrator\component-recognition-deploy\component-db
+cd D:\circuitorium-toolbox\元件数据库
 
 # 1) 提取技术参数与 SVG
 python scripts\extract_fritzing.py                 # 全部（按 parts.json）
@@ -60,7 +60,7 @@ python scripts\extract_fritzing.py --only resistor led
 # 2) 渲染元件图（复用项目里的 sharp，不需要装 Python 图像库）
 node scripts\render_images.mjs
 
-# 3) 合并 + 校验 → data/components.json
+# 3) 合并 + 校验 → 数据/components.json
 python scripts\merge_validate.py --strict
 
 # 可选：扩到更多元件时批量生成文案（需要自己的识别凭据）
@@ -94,7 +94,7 @@ python scripts\generate_text.py --only buzzer relay
 | 已完成的元件 | 电阻、发光二极管、陶瓷电容、三极管（NPN）、二极管 |
 | 图片体积 | 合计 18.9 KB，最大 4.9 KB（上限 50 KB/张）✅ |
 | 校验 | 长度、分类、条数、图片存在与体积 **全部通过** ✅ |
-| 剩余 25 个 | 见 `data/component_names.txt`（已列好，含建议顺序） |
+| 剩余 25 个 | 见 `数据/component_names.txt`（已列好，含建议顺序） |
 | 集成进软件 | ⬜ 未做（见下） |
 
 ## 集成到软件（未做，任务书第 5 步）
@@ -105,7 +105,7 @@ python scripts\generate_text.py --only buzzer relay
 3. 元件卡片：图 + 名称 + 一句话作用；点开看详情（作用 / 怎么认 / 正负极 / 常见错误 / 怎么读参数）
 4. 加"补充元件资料"入口（用户可改图改说明，存本地，标记 `source: user_submitted`）
 5. 加"导出元件包"按钮，可分享给他人
-6. **界面用词检查**：不出现 Fritzing / SVG / JSON / 数据库 等词（跑 `tools/checks/wording-audit.json`）
+6. **界面用词检查**：不出现 Fritzing / SVG / JSON / 数据库 等词（跑 `工具/checks/wording-audit.json`）
 
 体积预算：30 个元件图 ≈ 150 KB（按 5 KB/张估），远低于"整体 30 MB"的限制。
 

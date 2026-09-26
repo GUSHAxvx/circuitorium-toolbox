@@ -7,6 +7,9 @@ const isToolboxExport = process.env.TOOLBOX_EXPORT === "1";
 
 const nextConfig: NextConfig = {
   reactCompiler: true,
+  // 开发时用 127.0.0.1 访问也要算「自己人」：
+  // 验证脚本（工具/browser-check.cjs）走的是 127.0.0.1:3000，Next 新版本默认会拦跨源开发请求
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   // better-sqlite3 / sharp 为原生模块，需外部化处理，避免打包构建失败
   serverExternalPackages: ["better-sqlite3", "sharp"],
   ...(isToolboxExport

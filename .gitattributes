@@ -1,7 +1,7 @@
 # 换行符统一：源码用 LF，批处理脚本锁死 CRLF
 # 背景（两个都踩过）：
-#   - tools/portable/启动.bat 若是 LF，.bat 里的 goto 标签会失效、便携版起不来 → 必须 CRLF
-#   - tools/portable/server.ps1 只挑「UTF-8 + BOM」，换行符 LF/CRLF 都行（BOM 已写在文件里）
+#   - 工具/portable/启动.bat 若是 LF，.bat 里的 goto 标签会失效、便携版起不来 → 必须 CRLF
+#   - 工具/portable/server.ps1 只挑「UTF-8 + BOM」，换行符 LF/CRLF 都行（BOM 已写在文件里）
 * text=auto
 
 .gitattributes text eol=lf

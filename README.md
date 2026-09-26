@@ -13,8 +13,8 @@
 
 | 想要什么 | 用哪个 | 怎么开始 |
 |---|---|---|
-| 双击就开一个窗口，像正常软件一样 | **桌面版** | `dist-desktop\CIRCUITORIUM工具箱.exe`（3.6 MB，免安装）<br>或者装一下：`CIRCUITORIUM工具箱-安装包.exe` |
-| 拷进 U 盘 / 发到班级群，对方解压就能用 | **便携版** | 整个 `dist-toolbox` 文件夹拷过去 → 双击 `启动.bat` |
+| 双击就开一个窗口，像正常软件一样 | **桌面版** | `桌面版\CIRCUITORIUM工具箱.exe`（3.6 MB，免安装）<br>或者装一下：`CIRCUITORIUM工具箱-安装包.exe` |
+| 拷进 U 盘 / 发到班级群，对方解压就能用 | **便携版** | 整个 `便携版` 文件夹拷过去 → 双击 `启动.bat` |
 | 一台机器当服务器，多人登录、有社区和分享链接 | **服务器版** | `npm run dev` → 打开 http://localhost:3000 |
 
 桌面版和便携版的界面是同一份（静态导出），功能完全一样；服务器版多出登录、社区广场、公开分享链接。
@@ -38,8 +38,8 @@
 npm install
 npm run dev            # 服务器版（开发）
 npm run build          # 服务器版（生产构建）
-npm run build:portable # 便携版 → dist-toolbox/
-npm run build:desktop  # 桌面版 exe → D:\rust\target\...\release\（会自动拷到 dist-desktop/）
+npm run build:portable # 便携版 → 便携版/
+npm run build:desktop  # 桌面版 exe → D:\rust\target\...\release\（会自动拷到 桌面版/）
 npm run lint           # 代码检查
 ```
 
@@ -48,6 +48,8 @@ npm run lint           # 代码检查
 桌面版额外需要 Rust 工具链；本机的装法、国内镜像与踩过的坑都记在 `工具箱路线图.md` 的「四之十」一节里。
 
 ## 目录速览
+
+（项目放在 `D:\circuitorium-toolbox`；根目录用英文，是为了 Rust/打包工具链稳妥，里面的关键文件夹都用了中文名）
 
 ```
 src/app/toolbox/        本地工具箱（不登录、不联网，桌面版与便携版就是它）
@@ -59,13 +61,20 @@ src/lib/store/          本地存储（IndexedDB，接口在 types.ts，换成�
 src/lib/ecp/            作品文件 .ecp 的读写与校验
 src/lib/share/          自包含分享页、作品码
 src/lib/ai/             AI 识别（可选）：三种模式、老师配置码
-src-tauri/              桌面版外壳（Rust）
-tools/                  打包、验证与回归脚本（tools/checks/ 是真实浏览器断言）
+src-tauri/              桌面版外壳（Rust，名字不能改）
+元件数据库/             内置元件库流水线
+  数据/                 fritzing_raw.json（技术参数）→ components_text.json（教学文案）→ components.json（成品）+ 图片
+  脚本/                 extract_fritzing.py / render_images.mjs / merge_validate.py / generate_text.py
+工具/                   打包、验证与回归脚本（工具/checks/ 是真实浏览器断言；工具/portable/ 是便携版启动文件）
+便携版/                 便携版产物（解压即用；不提交到 git，由 npm run build:portable 生成）
+桌面版/                 桌面版产物：exe、安装包、便携版 zip、使用说明（不提交到 git）
+截图/                   验证过程中的截图与报告（不提交到 git）
+public/、src/、node_modules/、.next/、.git/ 等名字由框架决定，不能改
 ```
 
 ## 验证过的，不是"应该能用"
 
-`tools/checks/` 里有 27 个真实浏览器断言脚本（`tools/browser-check.cjs` 驱动，能等 IndexedDB、能断网、能连桌面版的 WebView），
+`工具/checks/` 里有 27 个真实浏览器断言脚本（`工具/browser-check.cjs` 驱动，能等 IndexedDB、能断网、能连桌面版的 WebView），
 逐条验过：断网能用、无 Key 能分享、分享不含 Key、解压即用、作品收到后能改能再分享、学生界面不出现任何技术黑话。
 结果都记在 `工具箱路线图.md`。
 
@@ -77,7 +86,7 @@ tools/                  打包、验证与回归脚本（tools/checks/ 是真实
 | `课程演示指南.md` | 上课演示的脚本：演示账号、演示流程、备用方案 |
 | `部署指南.md` | 把服务器版放到一台机器上长期跑 |
 | `代理部署说明.md` | 给 AI 识别配一个中转（真 Key 留在服务器环境变量里） |
-| `dist-desktop/使用说明.txt` | 直接给老师/学生看的一页说明 |
+| `桌面版/使用说明.txt` | 直接给老师/学生看的一页说明 |
 
 ---
 

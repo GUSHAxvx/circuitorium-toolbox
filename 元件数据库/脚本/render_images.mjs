@@ -3,7 +3,7 @@
 // 统一风格：去四周空白 → 居中放到 512×512 白底画布 → 调色板压缩（目标 <50KB）
 // 为什么用 Node + sharp：项目里本来就有 sharp（libvips，能读 SVG），不用再装 Python 图像库
 //
-// 用法：node scripts/render_images.mjs [--size 512] [--only resistor led]
+// 用法：node 脚本/render_images.mjs [--size 512] [--only resistor led]
 
 import fs from 'node:fs';
 import path from 'node:path';
@@ -12,7 +12,7 @@ import sharp from 'sharp';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
-const DATA = path.join(ROOT, 'data');
+const DATA = path.join(ROOT, '数据');
 
 const argv = process.argv.slice(2);
 const arg = (name, def) => {

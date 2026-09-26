@@ -1,11 +1,11 @@
 // 把 browser-check 报告里捕获的 .ecp（base64）还原成真实文件
-// 用法：node tools/report-to-ecp.cjs <报告.json> <输出.ecp>
+// 用法：node 工具/report-to-ecp.cjs <报告.json> <输出.ecp>
 
 const fs = require('fs');
 
 const [, , reportPath, outPath] = process.argv;
 if (!reportPath || !outPath) {
-  console.error('用法：node tools/report-to-ecp.cjs <报告.json> <输出.ecp>');
+  console.error('用法：node 工具/report-to-ecp.cjs <报告.json> <输出.ecp>');
   process.exit(1);
 }
 

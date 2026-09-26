@@ -3,10 +3,10 @@
 //       所以本地存储相关的验证必须用这个脚本。
 //
 // 用法：
-//   node tools/browser-check.cjs --url http://localhost:3000/toolbox --wait 6000 \
+//   node 工具/browser-check.cjs --url http://localhost:3000/toolbox --wait 6000 \
 //        --eval "document.querySelectorAll('.tb-template').length" --shot out.png
-//   node tools/browser-check.cjs --url http://localhost:3000/toolbox --wait 6000 \
-//        --script tools/tmp-check.json --shot out.png     # 表达式写在 JSON 数组里（中文不乱码）
+//   node 工具/browser-check.cjs --url http://localhost:3000/toolbox --wait 6000 \
+//        --script 工具/tmp-check.json --shot out.png     # 表达式写在 JSON 数组里（中文不乱码）
 //
 // 参数：--url <地址>  --wait <毫秒>  --eval <表达式>（可重复）  --eval2 <表达式>（交互后）
 //       --script <json文件>（一次读多条表达式，UTF-8，中文安全）  --then-wait <毫秒>
