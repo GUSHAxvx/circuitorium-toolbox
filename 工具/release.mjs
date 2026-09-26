@@ -73,6 +73,8 @@ const copy = (from, toName) => {
   return true;
 };
 copy(path.join(releaseDir, 'circuitorium-toolbox.exe'), 'CIRCUITORIUM工具箱.exe');
+// 桌面版的使用说明：源文件在 工具/desktop/，随仓库走（以前只躺在 桌面版/ 里，被 gitignore 掉，丢了就没了）
+copy(path.join(root, '工具', 'desktop', '使用说明.txt'), '使用说明.txt');
 let staleInstaller = false;
 const nsisDir = path.join(releaseDir, 'bundle', 'nsis');
 if (withInstaller && fs.existsSync(nsisDir)) {
