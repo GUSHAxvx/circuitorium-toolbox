@@ -1603,15 +1603,29 @@ export default function ProjectDetailView({
           </div>
         )}
 
-        {/* ===== 程序代码：只有卍解难度的作品才有这一块 ===== */}
-        {/* ===== 卍解专属：程序代码 / 接线表 / 调试记录 / 开发环境 ===== */}
+        {/* ===== 卍解专属：程序代码 / 接线表 / 调试记录 / 开发环境 =====
+             套一层和其它区块一致的卡片，别让它在页面上像一块"贴上去"的东西 */}
         {isBankai && (
-          <ProjectCodePanel
-            source={isLocal ? localBankaiSource(String(projectId)) : serverBankaiSource(String(projectId))}
-            codeNote={project.code_note || ''}
-            canEdit={isLocal || isOwner}
-            onChange={() => { if (isLocal) void loadProject(); }}
-          />
+          <Card
+            title="程序代码与调试记录"
+            icon="chip"
+            extra={<span className="pj-tag">卍解作品专属</span>}
+            style={{ marginTop: '22px' }}
+          >
+            <p className="pj-text pj-dim" style={{ marginTop: 0, marginBottom: '6px' }}>
+              {isLocal
+                ? '要写代码的作品，把程序、接线、踩过的坑都记在这里——这些会跟着作品文件一起传给别人。'
+                : '要写代码的作品，把程序、接线、踩过的坑都记在这里；别人打开这个作品就能照着做。'}
+            </p>
+            <div className="pj-bankai">
+              <ProjectCodePanel
+                source={isLocal ? localBankaiSource(String(projectId)) : serverBankaiSource(String(projectId))}
+                codeNote={project.code_note || ''}
+                canEdit={isLocal || isOwner}
+                onChange={() => { if (isLocal) void loadProject(); }}
+              />
+            </div>
+          </Card>
         )}
       </main>
 
@@ -1775,6 +1789,9 @@ export default function ProjectDetailView({
         .pj-tag-sm { font-size: 10.5px; padding: 2px 8px; }
         .pj-tag-blue { background: rgba(79,124,255,0.14); }
         .pj-tag-green { background: rgba(34,197,94,0.12); color: #6ee7b7; border-color: rgba(34,197,94,0.3); }
+        /* 卍解面板放进卡片里：去掉它自带的上边距，免得和卡片内边距叠加 */
+        .pj-bankai .pc-wrap { margin-top: 0; }
+        .pj-bankai .pc-tabs { margin-top: 4px; }
         .pj-diff { display: inline-flex; align-items: center; padding: 2px 10px; border-radius: 999px; font-size: 11.5px; font-weight: 800; letter-spacing: 0.5px; border: 1px solid transparent; }
         .pj-diff-shikai { background: rgba(148,163,184,0.14); color: #cbd5e1; border-color: rgba(148,163,184,0.3); }
         .pj-diff-bankai { background: rgba(251,191,36,0.14); color: #fcd34d; border-color: rgba(251,191,36,0.34); }

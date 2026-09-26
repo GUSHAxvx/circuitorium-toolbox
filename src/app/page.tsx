@@ -389,7 +389,7 @@ export default function Home() {
               marginLeft: isMobile ? 'auto' : 0,
               marginRight: isMobile ? 'auto' : 0,
             }}>
-              AI识别 · 项目设计 · 元器件管理 · 社区分享
+              工具箱在本机（断网也能用，带元件库和作品文件）· 项目与社区在服务器（多人共享）
             </p>
 
             <div style={{
@@ -399,10 +399,18 @@ export default function Home() {
               justifyContent: isMobile ? 'center' : 'flex-start',
             }}>
               <Link
-                href={user ? '/projects?new=1' : '/login'}
+                href="/toolbox"
                 style={ctaPrimary}
                 onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-2px)'; }}
                 onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                打开工具箱 →
+              </Link>
+              <Link
+                href={user ? '/projects?new=1' : '/login'}
+                style={ctaGhost}
+                onMouseEnter={(e) => { e.currentTarget.style.borderColor = 'rgba(124,138,255,0.42)'; e.currentTarget.style.background = 'rgba(124,138,255,0.08)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.14)'; e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; }}
               >
                 + 创建项目
               </Link>

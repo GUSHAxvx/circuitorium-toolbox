@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react';
 import SiteHeader from '@/components/SiteHeader';
+import { TOOLBOX_HOME, TOOLBOX_NAV } from '@/lib/standalone';
 import ProjectDetailView from '@/components/ProjectDetailView';
 import ComponentLibraryView from '@/components/ComponentLibraryView';
 import ShareWorkModal from '@/components/ShareWorkModal';
@@ -289,8 +290,8 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
         <div style={bgGradient} />
         <div style={gridBg} />
         <SiteHeader
-          homeHref="/toolbox"
-          links={[{ href: '/toolbox', label: '工具箱' }]}
+          homeHref={TOOLBOX_HOME}
+          links={TOOLBOX_NAV}
           maxWidth={1200}
           right={
             <span style={{
@@ -359,8 +360,8 @@ function ProjectCover({ projectId, name, coverImageId }: { projectId: string; na
       <div style={gridBg} />
 
       <SiteHeader
-        homeHref="/toolbox"
-        links={[{ href: '/toolbox', label: '工具箱' }]}
+        homeHref={TOOLBOX_HOME}
+        links={TOOLBOX_NAV}
         right={
         <span style={{
           padding: '4px 10px', borderRadius: '999px', fontSize: '11.5px', fontWeight: 700,
