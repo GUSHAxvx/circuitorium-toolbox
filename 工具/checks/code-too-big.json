@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  const out = {};\n  for (let i = 0; i < 16; i++) {\n    await sleep(400);\n    if (document.querySelector('.pc-msg')) break;\n  }\n  out.hint = document.querySelector('.pc-msg')?.textContent || null;\n  out.editorOpened = !!document.querySelector('.pc-textarea');\n  out.fileCount = document.querySelectorAll('.pc-item-name').length;\n  out.tabs = [...document.querySelectorAll('.pc-tab')].map((b) => b.textContent.trim());\n  return JSON.stringify(out);\n})()"
+]

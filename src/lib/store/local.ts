@@ -408,10 +408,14 @@ class LocalToolboxStore implements ToolboxStore {
   async deleteProject(id: string): Promise<void> {
     await this.ready();
     const database = db();
-    await database.transaction('rw', [database.projects, database.components, database.sections, database.images, database.pinRows, database.debugNotes], async () => {
+    await database.transaction('rw', [database.projects, database.components, database.sections, database.images, database.codeFiles, database.pinRows, database.debugNotes], async () => {
       await database.components.where('projectId').equals(id).delete();
       await database.sections.where('projectId').equals(id).delete();
       await database.images.where('projectId').equals(id).delete();
+      // 卍解的三类数据也要一起删：否则作品删掉了，代码正文还留在本机数据库里
+      await database.codeFiles.where('projectId').equals(id).delete();
+      await database.pinRows.where('projectId').equals(id).delete();
+      await database.debugNotes.where('projectId').equals(id).delete();
       await database.projects.delete(id);
     });
     this.releaseImageUrls();

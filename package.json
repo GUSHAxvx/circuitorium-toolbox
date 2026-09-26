@@ -14,6 +14,8 @@
         "release:installer": "node 工具/release.mjs --installer",
         "check": "tsc --noEmit && eslint",
         "sync:library": "node 工具/sync-library.mjs",
+        "selfcheck": "node 工具/selfcheck.mjs",
+        "checks": "node 工具/run-checks.mjs",
         "tauri": "tauri"
     },
     "dependencies": {

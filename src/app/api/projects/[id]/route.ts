@@ -160,7 +160,19 @@ export async function DELETE(
     return NextResponse.json({ error: '项目不存在' }, { status: 404 });
   }
 
-  db.prepare('DELETE FROM projects WHERE id = ?').run(id);
+  // 子表要显式删：SQLite 的外键默认不生效（没开 PRAGMA foreign_keys），
+  // 光靠建表时的 ON DELETE CASCADE 会留下孤儿行——尤其卍解的代码正文。
+  const wipe = db.transaction((pid: string) => {
+    db.prepare('DELETE FROM project_components WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_sections WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_images WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_code_files WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_pin_rows WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_debug_notes WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM project_stars WHERE project_id = ?').run(pid);
+    db.prepare('DELETE FROM projects WHERE id = ?').run(pid);
+  });
+  wipe(id);
 
   return NextResponse.json({ success: true });
 }

@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  const out = {};\n  // 等导入结果（成功提示 / 错误提示都算有反馈）\n  for (let i = 0; i < 24; i++) {\n    await sleep(500);\n    if (document.querySelector('.pj-title') || document.querySelector('.tb-error') || document.querySelector('.pj-toast')) break;\n  }\n  out.openedWork = document.querySelector('.pj-title')?.textContent || null;\n  out.error = document.querySelector('.tb-error')?.textContent || document.querySelector('.pj-toast')?.textContent || null;\n  out.stillOnList = !!document.querySelector('.tb-actions');\n  out.crashed = !document.body.innerText.trim();\n  out.consoleHint = 'ok';\n  return JSON.stringify(out);\n})()"
+]
