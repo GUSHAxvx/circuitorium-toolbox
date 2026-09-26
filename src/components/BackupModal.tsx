@@ -29,7 +29,11 @@ export default function BackupModal({ onClose, onRestored }: Props) {
       }
       const saved = await saveBlob(res.blob, res.filename);
       if (!saved.ok) { setErr('好，那就不存了'); return; }
-      setMsg(`存好了：${res.filename}（${res.projectCount} 件作品，${formatBytes(res.bytes)}），在 ${saved.where}`);
+      setMsg(
+        `存好了：${res.filename}（${res.projectCount} 件作品`
+        + (res.libraryCount ? ` + ${res.libraryCount} 个元件` : '')
+        + `，${formatBytes(res.bytes)}），在 ${saved.where}`
+      );
     } catch (e) {
       setErr(e instanceof Error ? e.message : '备份失败');
     } finally {
@@ -45,7 +49,11 @@ export default function BackupModal({ onClose, onRestored }: Props) {
     setMsg('');
     try {
       const res = await restoreToolboxBackup(file);
-      setMsg(`已找回 ${res.restored} 件作品${res.skipped ? `（${res.skipped} 件跳过）` : ''}`);
+      setMsg(
+        `已找回 ${res.restored} 件作品`
+        + (res.skipped ? `（${res.skipped} 件跳过）` : '')
+        + (res.libraryRestored ? `，另有 ${res.libraryRestored} 个元件进了你的元件库` : '')
+      );
       if (res.warnings.length) setErr(res.warnings[0]);
       onRestored();
     } catch (error) {
@@ -62,14 +70,18 @@ export default function BackupModal({ onClose, onRestored }: Props) {
         <header className="bk-head">
           <div>
             <h2>备份与恢复</h2>
-            <p>作品都在这台电脑上 · 换电脑或清理浏览器之前存一份</p>
+            <p>作品和元件都在这台电脑上 · 换电脑或清理浏览器之前存一份</p>
           </div>
           <button className="bk-close" onClick={onClose} aria-label="关闭">✕</button>
         </header>
 
         <section className="bk-card">
-          <h3>备份全部作品</h3>
-          <p>把所有作品打成一个压缩包（每件作品一个文件，图片原样保留）。存在 U 盘、网盘或发给自己的另一台电脑都可以。</p>
+          <h3>备份全部作品和元件</h3>
+          <p>
+            把所有作品打成一个压缩包（每件作品一个文件，图片原样保留），
+            你自己加的元件也一起带上——<strong>把这份备份给别人，他的元件库就和你一样了</strong>。
+            存在 U 盘、网盘或发给自己的另一台电脑都可以。
+          </p>
           <button className="bk-btn bk-btn-primary" onClick={handleBackup} disabled={busy}>
             {busy ? '处理中…' : '生成备份'}
           </button>
@@ -77,7 +89,8 @@ export default function BackupModal({ onClose, onRestored }: Props) {
 
         <section className="bk-card">
           <h3>从备份恢复</h3>
-          <p>选择之前生成的备份压缩包，作品会一件件回到工具箱里（不会覆盖现有作品，重复的会作为新的一件加进来）。</p>
+          <p>选择之前生成的备份压缩包，作品会一件件回到工具箱里（不会覆盖现有作品，重复的会作为新的一件加进来）；
+            备份里带的元件会合并进你的元件库，已经有了的保留你自己那份。</p>
           <label className="bk-btn bk-btn-soft" style={{ cursor: 'pointer' }}>
             选择备份文件
             <input ref={fileRef} type="file" accept=".zip,application/zip" style={{ display: 'none' }} onChange={handleRestore} disabled={busy} />
@@ -86,7 +99,7 @@ export default function BackupModal({ onClose, onRestored }: Props) {
 
         {msg && <p className="bk-msg">{msg}</p>}
         {err && <p className="bk-err">{err}</p>}
-        <p className="bk-note">备份里只有作品本身，不含任何识别凭据或本机设置。</p>
+        <p className="bk-note">备份里只有作品和你自己加的元件，不含任何识别凭据或本机设置。</p>
 
         <style jsx global>{`
           .bk-overlay { position: fixed; inset: 0; z-index: 400; background: rgba(4,7,14,0.78); backdrop-filter: blur(4px); display: grid; place-items: center; padding: 18px; }

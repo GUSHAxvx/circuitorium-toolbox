@@ -128,6 +128,30 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
         <p className="lib-intro-foot">
           一句话：内置的负责让你能开始，剩下的交给你和你的同学。
         </p>
+
+        <div className="lib-share">
+          <h3>想把整个元件库给别人？两种方法，都在这台电脑上就能做</h3>
+          <ol>
+            <li>
+              <strong>把元件装进一件作品里发出去</strong>（推荐，最省事）<br />
+              新建一件作品 → 在「元器件清单」里点「＋ 添加元件 → 从元件库选」，
+              把想分享的元件一个个挑进去 → 打开作品点「分享作品」，把分享页或作品文件发给对方。<br />
+              对方打开时会看到「这个作品里带着 N 个新元件」，点一下「全部加入我的元件库」，
+              你的元件就进了他的库，连图片和说明一起。
+            </li>
+            <li>
+              <strong>用「备份与恢复」整库打包</strong>（要传很多元件时用）<br />
+              回工具箱首页 → 「备份与恢复」→「生成备份」，会得到一个压缩包，
+              里面是全部作品 <em>加上你自己加的元件</em>。<br />
+              对方拿到这个压缩包，同样进「备份与恢复」→「选择备份文件」，
+              元件就会合并进他的库（他那儿已经有的，保留他自己那份，不会被覆盖）。
+            </li>
+          </ol>
+          <p className="lib-share-note">
+            注意：软件本身不带你这些元件——安装包和便携版里只有那 {builtinCount} 个内置元件。
+            要传自己攒的库，就得走上面这两条路。
+          </p>
+        </div>
       </section>
 
       <div className="lib-chips">
@@ -335,7 +359,13 @@ export default function ComponentLibraryView({ onBack, onCredits }: Props) {
         .lib-intro strong { color: #fff; font-weight: 700; }
         .lib-intro ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 7px; }
         .lib-intro li { font-size: 12.5px; line-height: 1.85; color: rgba(255,255,255,0.6); }
-        .lib-intro-foot { margin: 12px 0 0 !important; font-size: 12.5px; color: #a5b4fc !important; }
+        .lib-share { margin-top: 16px; padding-top: 14px; border-top: 1px dashed rgba(255,255,255,0.12); }
+        .lib-share h3 { margin: 0 0 10px; font-size: 13.5px; font-weight: 800; color: #dbe4ff; }
+        .lib-share ol { margin: 0; padding-left: 20px; display: flex; flex-direction: column; gap: 10px; }
+        .lib-share li { font-size: 12.5px; line-height: 1.9; color: rgba(255,255,255,0.62); }
+        .lib-share strong { color: #fff; }
+        .lib-share em { color: #a5b4fc; font-style: normal; text-decoration: underline; text-underline-offset: 2px; }
+        .lib-share-note { margin: 12px 0 0 !important; font-size: 12px; color: rgba(255,255,255,0.45) !important; }        .lib-intro-foot { margin: 12px 0 0 !important; font-size: 12.5px; color: #a5b4fc !important; }
         .lib-credit { margin: 22px 0 0; font-size: 11.5px; }
         .lib-credit-link { background: none; border: none; padding: 0; cursor: pointer; font: inherit; color: rgba(255,255,255,0.35); text-decoration: underline; text-underline-offset: 3px; }
         .lib-credit-link:hover { color: #9db8ff; }

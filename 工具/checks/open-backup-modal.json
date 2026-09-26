@@ -1,0 +1,3 @@
+[
+  "(async () => {\n  const sleep = (ms) => new Promise((r) => setTimeout(r, ms));\n  [...document.querySelectorAll('.tb-actions button')].find((b) => b.textContent.trim() === '备份与恢复')?.click();\n  await sleep(1500);\n  return JSON.stringify({ modalOpen: !!document.querySelector('.bk-modal'), fileInputReady: !!document.querySelector('.bk-modal input[type=file]') });\n})()"
+]
